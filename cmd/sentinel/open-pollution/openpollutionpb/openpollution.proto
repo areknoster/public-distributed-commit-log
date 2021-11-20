@@ -1,0 +1,32 @@
+// Upvest Confidential
+//
+// Copyright 2020 - 2021 Upvest GmbH. All Rights Reserved.
+//
+// NOTICE:  All information contained herein is, and remains the property
+// of Upvest GmbH. The intellectual and technical concepts contained herein
+// are proprietary to Upvest GmbH and are protected by trade secret or
+// copyright law. Dissemination of this information or reproduction of this
+// material is strictly forbidden unless prior written permission is
+// obtained from Upvest GmbH.
+
+// registry.group_id: data-and-reporting
+// registry.artifact_id: reportservice
+// registry.title: Report Service
+// registry.description: The Report service is responsible for generating reports
+// registry.labels: domain
+
+syntax = "proto3";
+
+option go_package = "./;openpollutionpb";
+
+
+package openpollution;
+
+message location {
+  double latitude = 1;
+  double longtitude = 2;
+}
+
+message Message {
+
+}
