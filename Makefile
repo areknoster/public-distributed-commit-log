@@ -6,6 +6,7 @@ format: format-go format-add-trailing-newline
 
 format-go:
 	gofumpt -w .
+	gci -w -local github.com/areknoster/public-distributed-commit-log . 1>/dev/null
 
 format-add-trailing-newline:
 	git grep -zIl ''  | while IFS= read -rd '' f; do tail -c1 < "$$f" | read -r _ || echo >> "$$f"; done

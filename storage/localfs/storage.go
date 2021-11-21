@@ -9,11 +9,12 @@ import (
 	"os"
 	"path"
 
-	"github.com/areknoster/public-distributed-commit-log/storage"
 	"github.com/ipfs/go-cid"
 	"github.com/multiformats/go-multihash"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/proto"
+
+	"github.com/areknoster/public-distributed-commit-log/storage"
 )
 
 type Storage struct {
@@ -77,7 +78,6 @@ func (s *Storage) Write(ctx context.Context, message proto.Message) (cid.Cid, er
 		return cid.Cid{}, fmt.Errorf("%w: get SHA256 multihash sum from mashalled message: %s", storage.ErrInternal, err.Error())
 	}
 	cidValue := cid.NewCidV1(multihash.SHA2_256, hash)
-	cidValue.String()
 
 	filePath := path.Join(s.dirPath, cidValue.String())
 	fileInfo, err := os.Stat(filePath)

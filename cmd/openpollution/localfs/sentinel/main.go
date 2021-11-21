@@ -1,6 +1,10 @@
 package main
 
 import (
+	"github.com/ipfs/go-cid"
+	"github.com/kelseyhightower/envconfig"
+	"github.com/rs/zerolog/log"
+
 	"github.com/areknoster/public-distributed-commit-log/cmd/openpollution/validator"
 	"github.com/areknoster/public-distributed-commit-log/grpc"
 	"github.com/areknoster/public-distributed-commit-log/head/memory"
@@ -9,9 +13,6 @@ import (
 	"github.com/areknoster/public-distributed-commit-log/sentinel/sentinelpb"
 	"github.com/areknoster/public-distributed-commit-log/sentinel/service"
 	"github.com/areknoster/public-distributed-commit-log/storage/localfs"
-	"github.com/ipfs/go-cid"
-	"github.com/kelseyhightower/envconfig"
-	"github.com/rs/zerolog/log"
 )
 
 type Config struct {
