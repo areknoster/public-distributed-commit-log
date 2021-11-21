@@ -19,14 +19,14 @@ const (
 )
 
 type ErrorValidation struct {
-	kind ErrorValidationKind
-	err  error
+	Kind ErrorValidationKind
+	Err  error
 }
 
 func (e ErrorValidation) Error() string {
-	return e.err.Error()
+	return e.Err.Error()
 }
 
 func (e ErrorValidation) Unwrap() error {
-	return e.err
+	return e.Err
 }

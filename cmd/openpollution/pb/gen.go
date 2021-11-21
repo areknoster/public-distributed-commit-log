@@ -9,6 +9,6 @@
 // material is strictly forbidden unless prior written permission is
 // obtained from Upvest GmbH.
 
-package openpollutionpb
+package pb
 
 //go:generate protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. openpollution.proto

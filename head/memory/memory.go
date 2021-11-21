@@ -4,7 +4,6 @@ package memory
 import (
 	"context"
 
-	"github.com/areknoster/public-distributed-commit-log/head"
 	"github.com/ipfs/go-cid"
 )
 
@@ -12,10 +11,11 @@ type HeadManager struct {
 	currentHead cid.Cid
 }
 
+func NewHeadManager(currentHead cid.Cid) *HeadManager {
+	return &HeadManager{currentHead: currentHead}
+}
+
 func (h *HeadManager) ReadHead(ctx context.Context) (cid.Cid, error) {
-	if h.currentHead == cid.Undef {
-		return cid.Cid{}, head.ErrTopicNotStarted
-	}
 	return h.currentHead, nil
 }
 
