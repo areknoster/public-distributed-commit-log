@@ -3,11 +3,11 @@ package validator
 import (
 	"context"
 
-	"github.com/areknoster/public-distributed-commit-log/cmd/openpollution/pb"
+	"github.com/ipfs/go-cid"
 
+	"github.com/areknoster/public-distributed-commit-log/cmd/openpollution/pb"
 	"github.com/areknoster/public-distributed-commit-log/sentinel"
 	"github.com/areknoster/public-distributed-commit-log/storage"
-	"github.com/ipfs/go-cid"
 )
 
 type SchemaValidator struct {

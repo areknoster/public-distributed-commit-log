@@ -3,13 +3,13 @@ package service
 import (
 	"context"
 
+	"github.com/ipfs/go-cid"
 	"github.com/rs/zerolog/log"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/areknoster/public-distributed-commit-log/sentinel"
 	"github.com/areknoster/public-distributed-commit-log/sentinel/sentinelpb"
-	"github.com/ipfs/go-cid"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type Service struct {

@@ -1,4 +1,4 @@
-// Package head provides abstractions for Public Distributed Commit Log  topic head manipulation
+// Package head provides abstractions for Public Distributed Commit Log topic head manipulation.
 package head
 
 import (

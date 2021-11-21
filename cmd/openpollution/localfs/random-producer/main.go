@@ -6,14 +6,15 @@ import (
 	"net"
 	"time"
 
-	"github.com/areknoster/public-distributed-commit-log/cmd/openpollution/pb"
-	"github.com/areknoster/public-distributed-commit-log/producer"
-	"github.com/areknoster/public-distributed-commit-log/sentinel/sentinelpb"
-	"github.com/areknoster/public-distributed-commit-log/storage/localfs"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
+
+	"github.com/areknoster/public-distributed-commit-log/cmd/openpollution/pb"
+	"github.com/areknoster/public-distributed-commit-log/producer"
+	"github.com/areknoster/public-distributed-commit-log/sentinel/sentinelpb"
+	"github.com/areknoster/public-distributed-commit-log/storage/localfs"
 )
 
 type Config struct {
