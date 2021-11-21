@@ -13,8 +13,14 @@ type MessageWriter interface {
 }
 
 type MessageReader interface {
-	Read(ctx context.Context, cid cid.Cid, message proto.Message) error
+	Read(ctx context.Context, cid cid.Cid) (ProtoUnmarshallable, error)
 }
+
+// ProtoUnmarshallable can be used to deserialize message data to proto structure
+type ProtoUnmarshallable interface {
+	Unmarshall(message proto.Message) error
+}
+
 
 type MessageStorage interface {
 	MessageReader
