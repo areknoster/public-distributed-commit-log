@@ -1,30 +1,30 @@
 package storage
 
 import (
+	"context"
 	"errors"
 
 	"github.com/ipfs/go-cid"
 	"google.golang.org/protobuf/proto"
 )
 
-type Writer interface {
-	Write(message proto.Message) (cid.Cid, error)
+type MessageWriter interface {
+	Write(ctx context.Context, message proto.Message) (cid.Cid, error)
 }
 
-// Reader gets
-type Reader interface {
-	Read(cid cid.Cid, message proto.Message) error
+type MessageReader interface {
+	Read(ctx context.Context, cid cid.Cid, message proto.Message) error
 }
 
-type Storage interface {
-	Reader
-	Writer
+type MessageStorage interface {
+	MessageReader
+	MessageWriter
 }
 
 type Error error
 
 var (
 	ErrMarshall   = errors.New("error when marshalling message")
-	ErrUnmarshall = errors.New("error when marshalling message")
+	ErrUnmarshall = errors.New("error when unmarshalling message")
 	ErrInternal   = errors.New("internal storage error")
 )

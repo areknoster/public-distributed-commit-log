@@ -1,5 +1,5 @@
 package localfs
 
-import "github.com/areknoster/public-distributed-commit-log/pkg/storage"
+import "github.com/areknoster/public-distributed-commit-log/storage"
 
-var _ storage.Storage = &Storage{}
+var _ storage.MessageStorage = &Storage{}

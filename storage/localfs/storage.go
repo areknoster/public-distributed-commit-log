@@ -2,8 +2,10 @@ package localfs
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path"
 
@@ -46,13 +48,13 @@ func createDirIfNotExists(dirPath string) error {
 	if !os.IsNotExist(err) {
 		return err
 	}
-	if err := os.MkdirAll(dirPath, 0o664); err != nil {
+	if err := os.MkdirAll(dirPath, fs.ModeDir|0o755); err != nil {
 		return fmt.Errorf("create directory %s: %w", dirPath, err)
 	}
 	return nil
 }
 
-func (s *Storage) Read(cid cid.Cid, message proto.Message) error {
+func (s *Storage) Read(ctx context.Context, cid cid.Cid, message proto.Message) error {
 	filePath := path.Join(s.dirPath, cid.String())
 	content, err := os.ReadFile(filePath)
 	if err != nil {
@@ -64,7 +66,7 @@ func (s *Storage) Read(cid cid.Cid, message proto.Message) error {
 	return nil
 }
 
-func (s *Storage) Write(message proto.Message) (cid.Cid, error) {
+func (s *Storage) Write(ctx context.Context, message proto.Message) (cid.Cid, error) {
 	encoded, err := s.marshalOpts.Marshal(message)
 	if err != nil {
 		return cid.Cid{}, fmt.Errorf("%w: %s", storage.ErrInternal, err.Error())
@@ -75,6 +77,7 @@ func (s *Storage) Write(message proto.Message) (cid.Cid, error) {
 		return cid.Cid{}, fmt.Errorf("%w: get SHA256 multihash sum from mashalled message: %s", storage.ErrInternal, err.Error())
 	}
 	cidValue := cid.NewCidV1(multihash.SHA2_256, hash)
+	cidValue.String()
 
 	filePath := path.Join(s.dirPath, cidValue.String())
 	fileInfo, err := os.Stat(filePath)

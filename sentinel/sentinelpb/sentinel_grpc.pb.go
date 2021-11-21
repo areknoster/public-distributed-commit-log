@@ -97,5 +97,5 @@ var Sentinel_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "pdcl.proto",
+	Metadata: "sentinel.proto",
 }
