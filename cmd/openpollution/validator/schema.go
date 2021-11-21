@@ -19,12 +19,20 @@ func NewSchemaValidator(messageStorage storage.MessageStorage) *SchemaValidator 
 }
 
 func (s *SchemaValidator) Validate(ctx context.Context, cid cid.Cid) error {
-	message := &pb.Message{}
-	if err := s.messageStorage.Read(ctx, cid, message); err != nil {
+	unmarshallable, err := s.messageStorage.Read(ctx, cid)
+	if err != nil {
 		return sentinel.ErrorValidation{
 			Kind: sentinel.ErrorValidationKindNotFound,
 			Err:  err,
 		}
 	}
+	message := &pb.Message{}
+	if err := unmarshallable.Unmarshall(message); err != nil {
+		return sentinel.ErrorValidation{
+			Kind: sentinel.ErrorValidationKindIncorrectContent,
+			Err:  err,
+		}
+	}
+
 	return nil
 }

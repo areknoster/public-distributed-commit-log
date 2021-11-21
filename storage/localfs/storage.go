@@ -55,16 +55,27 @@ func createDirIfNotExists(dirPath string) error {
 	return nil
 }
 
-func (s *Storage) Read(ctx context.Context, cid cid.Cid, message proto.Message) error {
+type unmarshallable struct{
+	protoBuf []byte
+	options proto.UnmarshalOptions
+}
+
+func (u unmarshallable) Unmarshall(message proto.Message) error {
+	return u.options.Unmarshal(u.protoBuf, message)
+}
+
+func (s *Storage) Read(ctx context.Context, cid cid.Cid ) (storage.ProtoUnmarshallable, error) {
 	filePath := path.Join(s.dirPath, cid.String())
 	content, err := os.ReadFile(filePath)
 	if err != nil {
-		return fmt.Errorf("read file with message: %w", err)
+		return nil,  fmt.Errorf("read file with message: %w", err)
 	}
-	if err := proto.Unmarshal(content, message); err != nil {
-		return fmt.Errorf("%w: unmarshal found message to given structure: %s", storage.ErrUnmarshall, err)
-	}
-	return nil
+	return unmarshallable{
+		protoBuf: content,
+		options:  proto.UnmarshalOptions{
+			DiscardUnknown:    true,
+		},
+	}, nil
 }
 
 func (s *Storage) Write(ctx context.Context, message proto.Message) (cid.Cid, error) {

@@ -2,6 +2,7 @@ package consumer
 
 import (
 	"context"
+	"github.com/areknoster/public-distributed-commit-log/storage"
 
 	"google.golang.org/protobuf/proto"
 )
@@ -10,9 +11,9 @@ type MessageHandler interface {
 	Handle(ctx context.Context, message proto.Message) error
 }
 
-type MessageFandlerFunc func(ctx context.Context, message proto.Message) error
+type MessageFandlerFunc func(ctx context.Context, message storage.ProtoUnmarshallable) error
 
-func (m MessageFandlerFunc) Handle(ctx context.Context, message proto.Message) error {
+func (m MessageFandlerFunc) Handle(ctx context.Context, message storage.ProtoUnmarshallable) error {
 	return m(ctx, message)
 }
 
