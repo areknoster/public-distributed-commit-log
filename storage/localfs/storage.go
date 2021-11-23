@@ -10,16 +10,49 @@ import (
 	"path"
 
 	"github.com/ipfs/go-cid"
-	"github.com/multiformats/go-multihash"
 	"github.com/rs/zerolog/log"
-	"google.golang.org/protobuf/proto"
-
-	"github.com/areknoster/public-distributed-commit-log/storage"
 )
 
 type Storage struct {
 	dirPath     string
-	marshalOpts proto.MarshalOptions
+}
+
+func (s *Storage) Read(ctx context.Context, cid cid.Cid) ([]byte, error) {
+	filePath := path.Join(s.dirPath, cid.String())
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil,  fmt.Errorf("read file with message: %w", err)
+	}
+	return content, nil
+}
+
+func (s *Storage) Write(ctx context.Context, content []byte, cidValue cid.Cid) error {
+	filePath := path.Join(s.dirPath, cidValue.String())
+	fileInfo, err := os.Stat(filePath)
+	if err == nil {
+		if fileInfo.Size() != int64(len(content)) {
+			return fmt.Errorf("content with given CID is already saved, but it has different length")
+		}
+		return nil
+	}
+	if !os.IsNotExist(err) {
+		return  fmt.Errorf("unknown file stat error: %w",  err)
+	}
+
+	file, err := os.Create(filePath)
+	if err != nil {
+		return fmt.Errorf("create file: %w", err)
+	}
+	if _, err := io.Copy(file, bytes.NewBuffer(content)); err != nil {
+		if err := file.Close(); err != nil {
+			log.Error().Str("file", filePath).Err(err).Msg("close file")
+		}
+		return fmt.Errorf("copy message content to file: %w", err)
+	}
+	if err := file.Close(); err != nil {
+		return fmt.Errorf("close file: %w", err)
+	}
+	return nil
 }
 
 func NewStorage(dirPath string) (*Storage, error) {
@@ -30,9 +63,6 @@ func NewStorage(dirPath string) (*Storage, error) {
 
 	s := &Storage{
 		dirPath: dirPath,
-		marshalOpts: proto.MarshalOptions{
-			Deterministic: true,
-		},
 	}
 	return s, nil
 }
@@ -53,67 +83,4 @@ func createDirIfNotExists(dirPath string) error {
 		return fmt.Errorf("create directory %s: %w", dirPath, err)
 	}
 	return nil
-}
-
-type unmarshallable struct{
-	protoBuf []byte
-	options proto.UnmarshalOptions
-}
-
-func (u unmarshallable) Unmarshall(message proto.Message) error {
-	return u.options.Unmarshal(u.protoBuf, message)
-}
-
-func (s *Storage) Read(ctx context.Context, cid cid.Cid ) (storage.ProtoUnmarshallable, error) {
-	filePath := path.Join(s.dirPath, cid.String())
-	content, err := os.ReadFile(filePath)
-	if err != nil {
-		return nil,  fmt.Errorf("read file with message: %w", err)
-	}
-	return unmarshallable{
-		protoBuf: content,
-		options:  proto.UnmarshalOptions{
-			DiscardUnknown:    true,
-		},
-	}, nil
-}
-
-func (s *Storage) Write(ctx context.Context, message proto.Message) (cid.Cid, error) {
-	encoded, err := s.marshalOpts.Marshal(message)
-	if err != nil {
-		return cid.Cid{}, fmt.Errorf("%w: %s", storage.ErrInternal, err.Error())
-	}
-
-	hash, err := multihash.Sum(encoded, multihash.SHA2_256, -1)
-	if err != nil {
-		return cid.Cid{}, fmt.Errorf("%w: get SHA256 multihash sum from mashalled message: %s", storage.ErrInternal, err.Error())
-	}
-	cidValue := cid.NewCidV1(multihash.SHA2_256, hash)
-
-	filePath := path.Join(s.dirPath, cidValue.String())
-	fileInfo, err := os.Stat(filePath)
-	if err == nil {
-		if fileInfo.Size() != int64(len(encoded)) {
-			return cid.Cid{}, fmt.Errorf("%w: content with given CID is already saved, but it has different length", storage.ErrInternal)
-		}
-		return cidValue, nil
-	}
-	if !os.IsNotExist(err) {
-		return cid.Cid{}, fmt.Errorf("%w: unknown file stat error: %s", storage.ErrInternal, err.Error())
-	}
-
-	file, err := os.Create(filePath)
-	if err != nil {
-		return cid.Cid{}, fmt.Errorf("create file: %w", err)
-	}
-	if _, err := io.Copy(file, bytes.NewBuffer(encoded)); err != nil {
-		if err := file.Close(); err != nil {
-			log.Error().Str("file", filePath).Err(err).Msg("close file")
-		}
-		return cid.Cid{}, fmt.Errorf("copy message content to file: %w", err)
-	}
-	if err := file.Close(); err != nil {
-		return cid.Cid{}, fmt.Errorf("close file: %w", err)
-	}
-	return cidValue, nil
 }
