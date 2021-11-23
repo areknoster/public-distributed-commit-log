@@ -33,4 +33,5 @@ var (
 	ErrMarshall   = errors.New("error when marshalling message")
 	ErrUnmarshall = errors.New("error when unmarshalling message")
 	ErrInternal   = errors.New("internal storage error")
+	ErrNotFound   = errors.New("message not found")
 )

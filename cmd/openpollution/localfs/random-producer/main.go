@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/areknoster/public-distributed-commit-log/storage"
 	"math/rand"
 	"net"
 	"time"
@@ -28,10 +29,11 @@ func main() {
 		log.Fatal().Err(err).Msg("can't process environment variables for config")
 	}
 
-	storage, err := localfs.NewStorage("./storage")
+	contentStorage, err := localfs.NewStorage("./storage")
 	if err != nil {
-		log.Fatal().Err(err).Msg("can't initialize storage")
+		log.Fatal().Err(err).Msg("can't initialize contentStorage")
 	}
+	messageStorage := storage.NewProtoMessageStorage(contentStorage)
 
 	conn, err := grpc.Dial(
 		net.JoinHostPort(config.Host, config.Port),
@@ -41,7 +43,7 @@ func main() {
 		log.Fatal().Err(err).Msg("can't connect to sentinel")
 	}
 	sentinelClient := sentinelpb.NewSentinelClient(conn)
-	messageProducer := producer.NewMessageProducer(storage, sentinelClient)
+	messageProducer := producer.NewMessageProducer(messageStorage, sentinelClient)
 	r := randomOPMessageProducer{producer: messageProducer}
 	r.run()
 }
@@ -52,6 +54,7 @@ type randomOPMessageProducer struct {
 
 func (r *randomOPMessageProducer) run() {
 	for {
+		time.Sleep(1 * time.Second)
 		message := &pb.Message{
 			MeasureTime: timestamppb.Now(),
 			Location: &pb.Location{

@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"github.com/areknoster/public-distributed-commit-log/head"
 
 	"github.com/ipfs/go-cid"
 	"github.com/rs/zerolog/log"
@@ -17,10 +19,16 @@ type Service struct {
 	validator sentinel.Validator
 	pinner    sentinel.Pinner
 	commiter  sentinel.Commiter
+	headReader head.Reader
 }
 
-func New(validator sentinel.Validator, pinner sentinel.Pinner, commiter sentinel.Commiter) *Service {
-	return &Service{validator: validator, pinner: pinner, commiter: commiter}
+func New(validator sentinel.Validator, pinner sentinel.Pinner, commiter sentinel.Commiter,headReader head.Reader) *Service {
+	return &Service{
+		validator: validator,
+		pinner: pinner,
+		commiter: commiter,
+		headReader: headReader,
+	}
 }
 
 func (s *Service) Publish(ctx context.Context, req *sentinelpb.PublishRequest) (*sentinelpb.PublishResponse, error) {
@@ -49,4 +57,13 @@ func (s *Service) Publish(ctx context.Context, req *sentinelpb.PublishRequest) (
 func validationErrorToProtoStatus(err error) error {
 	// todo: map validation errors to correct statuses
 	return status.Error(codes.InvalidArgument, err.Error())
+}
+
+
+func (s *Service) GetHeadCID(ctx context.Context, req *sentinelpb.GetHeadCIDRequest) (*sentinelpb.GetHeadCIDResponse, error){
+	headCID, err := s.headReader.ReadHead(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("get head CID: %w", err)
+	}
+	return &sentinelpb.GetHeadCIDResponse{Cid: headCID.String()}, nil
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/areknoster/public-distributed-commit-log/storage"
 	"github.com/ipfs/go-cid"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog/log"
@@ -25,16 +26,19 @@ func main() {
 		log.Fatal().Err(err).Msg("can't process environment variables for config")
 	}
 
-	storage, err := localfs.NewStorage("./storage")
+	contentStorage, err := localfs.NewStorage("./storage")
 	if err != nil {
 		log.Fatal().Err(err).Msg("can't initialize storage")
 	}
-	schemaValidator := validator.NewSchemaValidator(storage)
+	messageStorage := storage.NewProtoMessageStorage(contentStorage)
+
+
+	schemaValidator := validator.NewSchemaValidator(messageStorage)
 	memoryPinner := pinner.NewMemoryPinner()
 	headManager := memory.NewHeadManager(cid.Undef) // initialize it as if it was initializing topic for the first time
-	instantCommiter := commiter.NewInstant(headManager, storage, memoryPinner)
+	instantCommiter := commiter.NewInstant(headManager, messageStorage, memoryPinner)
 
-	sentinelService := service.New(schemaValidator, memoryPinner, instantCommiter)
+	sentinelService := service.New(schemaValidator, memoryPinner, instantCommiter, headManager)
 
 	grpcServer, err := grpc.NewServer(config.GRPC)
 	if err != nil {

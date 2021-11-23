@@ -26,16 +26,20 @@ package sentinel;
 
 service Sentinel{
   rpc Publish(PublishRequest) returns (PublishResponse);
+  // this might be removed when we start to serve topic head via IPNS
+  rpc GetHeadCID(GetHeadCIDRequest) returns (GetHeadCIDResponse);
 }
 
 message PublishRequest{
   string cid = 1;
 }
-
 message PublishResponse {}
 
-message Commit {
-  google.protobuf.Timestamp created = 1;
-  string previous_commit_cid = 2;
-  repeated string messages_cids = 3;
+message GetHeadCIDRequest{}
+message GetHeadCIDResponse{
+  string cid = 1;
 }
+
+
+
+
