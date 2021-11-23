@@ -16,6 +16,7 @@ const (
 	ErrorValidationKindUnknown ErrorValidationKind = iota
 	ErrorValidationKindNotFound
 	ErrorValidationKindInternal
+	ErrorValidationKindIncorrectContent
 )
 
 type ErrorValidation struct {

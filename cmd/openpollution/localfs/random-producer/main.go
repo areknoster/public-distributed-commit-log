@@ -14,12 +14,14 @@ import (
 	"github.com/areknoster/public-distributed-commit-log/cmd/openpollution/pb"
 	"github.com/areknoster/public-distributed-commit-log/producer"
 	"github.com/areknoster/public-distributed-commit-log/sentinel/sentinelpb"
+	"github.com/areknoster/public-distributed-commit-log/storage"
 	"github.com/areknoster/public-distributed-commit-log/storage/localfs"
 )
 
 type Config struct {
-	Host string `envconfig:"SENTINEL_SERVICE_HOST" default:"localhost"`
-	Port string `envconfig:"SENTINEL_SERVICE_PORT" default:"8000"`
+	Host     string        `envconfig:"SENTINEL_SERVICE_HOST" default:"localhost"`
+	Port     string        `envconfig:"SENTINEL_SERVICE_PORT" default:"8000"`
+	Interval time.Duration `envconfig:"INTERVAL" default:"1s"`
 }
 
 func main() {
@@ -28,10 +30,11 @@ func main() {
 		log.Fatal().Err(err).Msg("can't process environment variables for config")
 	}
 
-	storage, err := localfs.NewStorage("./storage")
+	contentStorage, err := localfs.NewStorage("./storage")
 	if err != nil {
-		log.Fatal().Err(err).Msg("can't initialize storage")
+		log.Fatal().Err(err).Msg("can't initialize contentStorage")
 	}
+	messageStorage := storage.NewProtoMessageStorage(contentStorage)
 
 	conn, err := grpc.Dial(
 		net.JoinHostPort(config.Host, config.Port),
@@ -41,17 +44,19 @@ func main() {
 		log.Fatal().Err(err).Msg("can't connect to sentinel")
 	}
 	sentinelClient := sentinelpb.NewSentinelClient(conn)
-	messageProducer := producer.NewMessageProducer(storage, sentinelClient)
-	r := randomOPMessageProducer{producer: messageProducer}
+	messageProducer := producer.NewMessageProducer(messageStorage, sentinelClient)
+	r := randomOPMessageProducer{producer: messageProducer, interval: config.Interval}
 	r.run()
 }
 
 type randomOPMessageProducer struct {
 	producer producer.Producer
+	interval time.Duration
 }
 
 func (r *randomOPMessageProducer) run() {
 	for {
+		time.Sleep(r.interval)
 		message := &pb.Message{
 			MeasureTime: timestamppb.Now(),
 			Location: &pb.Location{
