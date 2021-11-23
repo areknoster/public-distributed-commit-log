@@ -17,12 +17,8 @@
 
 syntax = "proto3";
 
-option go_package = "./;pdclpb";
+option go_package = "./;testpb";
 
-import "google/protobuf/timestamp.proto";
-
-message Commit {
-  google.protobuf.Timestamp created = 1;
-  string previous_commit_cid = 2;
-  repeated string messages_cids = 3;
+message Message {
+  int64 id = 1;
 }
