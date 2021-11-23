@@ -9,20 +9,6 @@
 // material is strictly forbidden unless prior written permission is
 // obtained from Upvest GmbH.
 
-// registry.group_id: data-and-reporting
-// registry.artifact_id: reportservice
-// registry.title: Report Service
-// registry.description: The Report service is responsible for generating reports
-// registry.labels: domain
+package pdclpb
 
-syntax = "proto3";
-
-option go_package = "./;pdclpb";
-
-import "google/protobuf/timestamp.proto";
-
-message Commit {
-  google.protobuf.Timestamp created = 1;
-  string previous_commit_cid = 2;
-  repeated string messages_cids = 3;
-}
+//go:generate protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. pdcl.proto
