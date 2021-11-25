@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/ipfs/go-cid"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog/log"
@@ -26,7 +28,12 @@ func main() {
 		log.Fatal().Err(err).Msg("can't process environment variables for config")
 	}
 
-	contentStorage, err := localfs.NewStorage("./storage")
+	// TODO: make this configurable
+	dirname, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatal().Err(err).Msg("reading user home directory")
+	}
+	contentStorage, err := localfs.NewStorage(dirname + "/.local/share/pdcl/storage")
 	if err != nil {
 		log.Fatal().Err(err).Msg("can't initialize storage")
 	}

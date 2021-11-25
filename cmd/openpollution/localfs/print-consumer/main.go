@@ -44,7 +44,12 @@ func main() {
 	sentinelClient := sentinelpb.NewSentinelClient(conn)
 	sentinelHeadReader := sentinel_reader.NewSentinelHeadReader(sentinelClient)
 	consumerOffsetManager := memory.NewHeadManager(cid.Undef)
-	fsStorage, err := localfs.NewStorage("./storage")
+	// TODO: make this configurable
+	dirname, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatal().Err(err).Msg("reading user home directory")
+	}
+	fsStorage, err := localfs.NewStorage(dirname + "/.local/share/pdcl/storage")
 	if err != nil {
 		log.Fatal().Err(err).Msg("can't initialize storage")
 	}
