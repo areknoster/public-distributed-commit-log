@@ -7,7 +7,7 @@ import (
 	"golang.org/x/sync/errgroup"
 	"time"
 
-	"github.com/areknoster/public-distributed-commit-log/head"
+	"github.com/areknoster/public-distributed-commit-log/thead"
 	"github.com/areknoster/public-distributed-commit-log/storage"
 	"github.com/rs/zerolog/log"
 )
@@ -18,13 +18,13 @@ type FirstToLastConsumerConfig struct {
 }
 
 type FirstToLastConsumer struct {
-	headReader head.Reader
-	consumerOffsetManager head.Manager // todo: this might this to be swapped to sth cached and with sync method
+	headReader            thead.Reader
+	consumerOffsetManager thead.Manager // todo: this might this to be swapped to sth cached and with sync method
 	messageReader         storage.MessageReader
 	config                FirstToLastConsumerConfig
 }
 
-func NewFirstToLastConsumer(headReader head.Reader, consumerOffsetManager head.Manager, messageReader storage.MessageReader, config FirstToLastConsumerConfig) *FirstToLastConsumer {
+func NewFirstToLastConsumer(headReader thead.Reader, consumerOffsetManager thead.Manager, messageReader storage.MessageReader, config FirstToLastConsumerConfig) *FirstToLastConsumer {
 	return &FirstToLastConsumer{headReader: headReader, consumerOffsetManager: consumerOffsetManager, messageReader: messageReader, config: config}
 }
 

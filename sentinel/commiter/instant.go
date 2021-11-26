@@ -7,7 +7,7 @@ import (
 	"github.com/ipfs/go-cid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/areknoster/public-distributed-commit-log/head"
+	"github.com/areknoster/public-distributed-commit-log/thead"
 	"github.com/areknoster/public-distributed-commit-log/pdclpb"
 	"github.com/areknoster/public-distributed-commit-log/sentinel"
 	"github.com/areknoster/public-distributed-commit-log/storage"
@@ -15,12 +15,12 @@ import (
 
 // Instant Commiter adds commit after every single received commit
 type Instant struct {
-	headManager    head.Manager
+	headManager    thead.Manager
 	messageStorage storage.MessageStorage
 	pinner         sentinel.Pinner
 }
 
-func NewInstant(headManager head.Manager, messageStorage storage.MessageStorage, pinner sentinel.Pinner) *Instant {
+func NewInstant(headManager thead.Manager, messageStorage storage.MessageStorage, pinner sentinel.Pinner) *Instant {
 	return &Instant{headManager: headManager, messageStorage: messageStorage, pinner: pinner}
 }
 

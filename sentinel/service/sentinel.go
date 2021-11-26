@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/areknoster/public-distributed-commit-log/head"
+	"github.com/areknoster/public-distributed-commit-log/thead"
 
 	"github.com/ipfs/go-cid"
 	"github.com/rs/zerolog/log"
@@ -18,11 +18,11 @@ type Service struct {
 	sentinelpb.UnimplementedSentinelServer
 	validator sentinel.Validator
 	pinner    sentinel.Pinner
-	commiter  sentinel.Commiter
-	headReader head.Reader
+	commiter   sentinel.Commiter
+	headReader thead.Reader
 }
 
-func New(validator sentinel.Validator, pinner sentinel.Pinner, commiter sentinel.Commiter,headReader head.Reader) *Service {
+func New(validator sentinel.Validator, pinner sentinel.Pinner, commiter sentinel.Commiter,headReader thead.Reader) *Service {
 	return &Service{
 		validator: validator,
 		pinner: pinner,

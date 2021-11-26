@@ -1,5 +1,5 @@
 // Package head provides abstractions for Public Distributed Commit Log topic head manipulation.
-package head
+package thead
 
 import (
 	"context"
