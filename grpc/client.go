@@ -1,11 +1,12 @@
 package grpc
 
 import (
-	"google.golang.org/grpc"
 	"net"
+
+	"google.golang.org/grpc"
 )
 
-type ConnConfig struct{
+type ConnConfig struct {
 	Host, Port string
 }
 

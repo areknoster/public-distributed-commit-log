@@ -38,7 +38,7 @@ output:
 # all available settings of specific linters
 linters-settings:
   govet:
-    check-shadowing: true
+    check-shadowing: false
   revive:
     # minimal confidence for issues, default is 0.8
     min-confidence: 0.8
@@ -67,7 +67,6 @@ linters:
   enable:
     - gofumpt
     - govet
-    - revive
     - dupl
     - goconst
     - misspell

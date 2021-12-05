@@ -1,6 +1,7 @@
 # dirs
 proto_includes
 postgres-data
+node_modules
 
 # Binaries for programs and plugins
 *.exe

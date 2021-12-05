@@ -3,15 +3,18 @@ package storage
 import (
 	"context"
 	"fmt"
+
 	"github.com/ipfs/go-cid"
 	"github.com/multiformats/go-multihash"
 	"google.golang.org/protobuf/proto"
 )
 
+// MessageWriter persists message with CID accessor
 type MessageWriter interface {
-	Write(ctx context.Context, message proto.Message )  (cid.Cid, error)
+	Write(ctx context.Context, message proto.Message) (cid.Cid, error)
 }
 
+// MessageReader lets user access message based on CID address
 type MessageReader interface {
 	Read(ctx context.Context, cid cid.Cid) (ProtoUnmarshallable, error)
 }
@@ -21,24 +24,24 @@ type ProtoUnmarshallable interface {
 	Unmarshall(message proto.Message) error
 }
 
-
+// MessageStorage is responsible for accessing the messages based on CID
 type MessageStorage interface {
 	MessageReader
 	MessageWriter
 }
 
-
-type ProtoMessageStorage struct{
+type ProtoMessageStorage struct {
 	contentStorage ContentStorage
-	marshalOpts     proto.MarshalOptions
+	marshalOpts    proto.MarshalOptions
 }
 
 func NewProtoMessageStorage(contentStorage ContentStorage) *ProtoMessageStorage {
 	return &ProtoMessageStorage{
 		contentStorage: contentStorage,
 		marshalOpts: proto.MarshalOptions{
-		Deterministic:     true,
-	}}
+			Deterministic: true,
+		},
+	}
 }
 
 func (p *ProtoMessageStorage) Read(ctx context.Context, cid cid.Cid) (ProtoUnmarshallable, error) {
@@ -48,8 +51,8 @@ func (p *ProtoMessageStorage) Read(ctx context.Context, cid cid.Cid) (ProtoUnmar
 	}
 	return unmarshallable{
 		protoBuf: content,
-		options:  proto.UnmarshalOptions{
-			DiscardUnknown:    true,
+		options: proto.UnmarshalOptions{
+			DiscardUnknown: true,
 		},
 	}, nil
 }
@@ -71,12 +74,11 @@ func (p *ProtoMessageStorage) Write(ctx context.Context, message proto.Message) 
 	return cidValue, nil
 }
 
-type unmarshallable struct{
+type unmarshallable struct {
 	protoBuf []byte
-	options proto.UnmarshalOptions
+	options  proto.UnmarshalOptions
 }
 
 func (u unmarshallable) Unmarshall(message proto.Message) error {
 	return u.options.Unmarshal(u.protoBuf, message)
 }
-
