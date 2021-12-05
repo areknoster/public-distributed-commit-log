@@ -1,4 +1,4 @@
-name: Lint Commit Messages
+name: Run linters
 on: [push]
 
 jobs:
