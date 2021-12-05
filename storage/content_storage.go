@@ -2,18 +2,22 @@ package storage
 
 import (
 	"context"
+
 	"github.com/ipfs/go-cid"
 )
 
-type ContentReader interface{
+// ContentReader is responsible for fetching content based on it's CID.
+type ContentReader interface {
 	Read(ctx context.Context, cid cid.Cid) ([]byte, error)
 }
 
+// ContentWriter writes given content with assigned CID
 type ContentWriter interface {
-	Write(ctx context.Context, content []byte, cid cid.Cid)  error
+	Write(ctx context.Context, content []byte, cid cid.Cid) error
 }
 
-type ContentStorage interface{
+// ContentStorage allows its user to access content based on CID.
+type ContentStorage interface {
 	ContentReader
 	ContentWriter
 }

@@ -1,4 +1,4 @@
-// Package head provides abstractions for Public Distributed Commit Log topic head manipulation.
+// Package thead provides abstractions for Public Distributed Commit Log topic head manipulation.
 package thead
 
 import (
@@ -8,14 +8,17 @@ import (
 	"github.com/ipfs/go-cid"
 )
 
+// Reader provides cid of topic head
 type Reader interface {
 	ReadHead(ctx context.Context) (cid.Cid, error)
 }
 
+// Setter sets topic head
 type Setter interface {
 	SetHead(ctx context.Context, cid cid.Cid) error
 }
 
+// Manager is responsible for accessing topic head
 type Manager interface {
 	Reader
 	Setter

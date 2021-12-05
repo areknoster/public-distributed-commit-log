@@ -14,14 +14,14 @@ import (
 )
 
 type Storage struct {
-	dirPath     string
+	dirPath string
 }
 
 func (s *Storage) Read(ctx context.Context, cid cid.Cid) ([]byte, error) {
 	filePath := path.Join(s.dirPath, cid.String())
 	content, err := os.ReadFile(filePath)
 	if err != nil {
-		return nil,  fmt.Errorf("read file with message: %w", err)
+		return nil, fmt.Errorf("read file with message: %w", err)
 	}
 	return content, nil
 }
@@ -36,7 +36,7 @@ func (s *Storage) Write(ctx context.Context, content []byte, cidValue cid.Cid) e
 		return nil
 	}
 	if !os.IsNotExist(err) {
-		return  fmt.Errorf("unknown file stat error: %w",  err)
+		return fmt.Errorf("unknown file stat error: %w", err)
 	}
 
 	file, err := os.Create(filePath)

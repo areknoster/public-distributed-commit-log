@@ -2,10 +2,16 @@ package test
 
 import (
 	"context"
+	"testing"
+	"time"
+
+	"github.com/ipfs/go-cid"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+	"golang.org/x/sync/errgroup"
+
 	consumer "github.com/areknoster/public-distributed-commit-log/consumer"
 	"github.com/areknoster/public-distributed-commit-log/grpc"
-	"github.com/areknoster/public-distributed-commit-log/thead/memory"
-	"github.com/areknoster/public-distributed-commit-log/thead/sentinel_reader"
 	"github.com/areknoster/public-distributed-commit-log/producer"
 	"github.com/areknoster/public-distributed-commit-log/sentinel/commiter"
 	"github.com/areknoster/public-distributed-commit-log/sentinel/pinner"
@@ -14,12 +20,8 @@ import (
 	"github.com/areknoster/public-distributed-commit-log/storage"
 	memorystorage "github.com/areknoster/public-distributed-commit-log/storage/memory"
 	"github.com/areknoster/public-distributed-commit-log/test/testpb"
-	"github.com/ipfs/go-cid"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-	"golang.org/x/sync/errgroup"
-	"testing"
-	"time"
+	"github.com/areknoster/public-distributed-commit-log/thead/memory"
+	"github.com/areknoster/public-distributed-commit-log/thead/sentinel"
 )
 
 type ProduceConsumeTestSuite struct {
@@ -28,7 +30,7 @@ type ProduceConsumeTestSuite struct {
 	grpcServer     *grpc.Server
 	sentinelClient sentinelpb.SentinelClient
 	producer       *producer.MessageProducer
-	headReader     *sentinel_reader.SentinelHeadReader
+	headReader     *sentinel.Reader
 	globalCtx      context.Context
 }
 
@@ -82,7 +84,7 @@ func (s *ProduceConsumeTestSuite) setupProducer() {
 }
 
 func (s *ProduceConsumeTestSuite) setupConsumerDependencies() {
-	s.headReader = sentinel_reader.NewSentinelHeadReader(s.sentinelClient)
+	s.headReader = sentinel.New(s.sentinelClient)
 }
 
 func (s *ProduceConsumeTestSuite) newConsumer(offset cid.Cid) *consumer.FirstToLastConsumer {
@@ -105,13 +107,12 @@ func (s *ProduceConsumeTestSuite) TestProduceConsume() {
 	idSet := make(map[int64]struct{}, messageNumber)
 	for i := int64(0); i < messageNumber; i++ {
 		messages[i] = &testpb.Message{Id: i}
-		idSet[i] = struct {}{}
+		idSet[i] = struct{}{}
 	}
 
 	s.Run("when messsages are first produced, and then a consumer is started, all produced messages should be handled at the beginning", func() {
 		s.consumeFromStart(ctx, messages, idSet)
 	})
-
 }
 
 func (s *ProduceConsumeTestSuite) consumeFromStart(ctx context.Context, messages []*testpb.Message, idSet map[int64]struct{}) {
@@ -124,7 +125,7 @@ func (s *ProduceConsumeTestSuite) consumeFromStart(ctx context.Context, messages
 	consumeCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	go func() {
-		err := cons.Consume(consumeCtx, consumer.MessageFandlerFunc(func(ctx context.Context, message storage.ProtoUnmarshallable) error {
+		err := cons.Consume(consumeCtx, consumer.MessageHandlerFunc(func(ctx context.Context, message storage.ProtoUnmarshallable) error {
 			testMessage := &testpb.Message{}
 			if err := message.Unmarshall(testMessage); err != nil {
 				close(idsChan)
@@ -161,7 +162,7 @@ func (m *mockValidator) Validate(ctx context.Context, cid cid.Cid) error {
 	return nil
 }
 
-func TestProduceConsumeTestSuite(t *testing.T){
+func TestProduceConsumeTestSuite(t *testing.T) {
 	ts := &ProduceConsumeTestSuite{}
 	suite.Run(t, ts)
 }

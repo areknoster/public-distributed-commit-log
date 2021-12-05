@@ -24,11 +24,12 @@
 package sentinelpb
 
 import (
+	reflect "reflect"
+	sync "sync"
+
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	_ "google.golang.org/protobuf/types/known/timestamppb"
-	reflect "reflect"
-	sync "sync"
 )
 
 const (
@@ -247,13 +248,16 @@ func file_sentinel_proto_rawDescGZIP() []byte {
 	return file_sentinel_proto_rawDescData
 }
 
-var file_sentinel_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
-var file_sentinel_proto_goTypes = []interface{}{
-	(*PublishRequest)(nil),     // 0: sentinel.PublishRequest
-	(*PublishResponse)(nil),    // 1: sentinel.PublishResponse
-	(*GetHeadCIDRequest)(nil),  // 2: sentinel.GetHeadCIDRequest
-	(*GetHeadCIDResponse)(nil), // 3: sentinel.GetHeadCIDResponse
-}
+var (
+	file_sentinel_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+	file_sentinel_proto_goTypes  = []interface{}{
+		(*PublishRequest)(nil),     // 0: sentinel.PublishRequest
+		(*PublishResponse)(nil),    // 1: sentinel.PublishResponse
+		(*GetHeadCIDRequest)(nil),  // 2: sentinel.GetHeadCIDRequest
+		(*GetHeadCIDResponse)(nil), // 3: sentinel.GetHeadCIDResponse
+	}
+)
+
 var file_sentinel_proto_depIdxs = []int32{
 	0, // 0: sentinel.Sentinel.Publish:input_type -> sentinel.PublishRequest
 	2, // 1: sentinel.Sentinel.GetHeadCID:input_type -> sentinel.GetHeadCIDRequest

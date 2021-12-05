@@ -4,11 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
+
+	"github.com/ipfs/go-cid"
+
 	"github.com/areknoster/public-distributed-commit-log/pdcl"
 	"github.com/areknoster/public-distributed-commit-log/pdclpb"
 	"github.com/areknoster/public-distributed-commit-log/storage"
-	"github.com/ipfs/go-cid"
-	"time"
 )
 
 type commit struct {
@@ -17,9 +19,7 @@ type commit struct {
 	Messages []cid.Cid
 }
 
-var (
-	ErrCommitNotFound = errors.New("commit not found")
-)
+var errCommitNotFound = errors.New("commit not found")
 
 func newCommit(itsOwnCID cid.Cid, pbCommit *pdclpb.Commit) (commit, error) {
 	messagesCids := make([]cid.Cid, len(pbCommit.MessagesCids))
@@ -27,14 +27,14 @@ func newCommit(itsOwnCID cid.Cid, pbCommit *pdclpb.Commit) (commit, error) {
 	for i, messageCID := range pbCommit.MessagesCids {
 		messagesCids[i], err = cid.Decode(messageCID)
 		if err != nil {
-			return commit{}, fmt.Errorf("decode message cid: %w")
+			return commit{}, fmt.Errorf("decode message cid: %w", err)
 		}
 	}
 
 	var previousCID cid.Cid
 	previousCID, err = pdcl.ParseCID(pbCommit.PreviousCommitCid)
 	if err != nil {
-		return commit{}, fmt.Errorf("decode previous commit cid: %w")
+		return commit{}, fmt.Errorf("decode previous commit cid: %w", err)
 	}
 
 	return commit{
@@ -44,20 +44,20 @@ func newCommit(itsOwnCID cid.Cid, pbCommit *pdclpb.Commit) (commit, error) {
 	}, nil
 }
 
-type CommitReader interface{
+type commitReader interface {
 	GetCommit(ctx context.Context, cid cid.Cid) (commit, error)
 }
 
-type StorageCommitReader struct{
-	reader storage.MessageReader
+type storageCommitReader struct {
+	reader  storage.MessageReader
 	timeout time.Duration
 }
 
-func NewStorageCommitReader(reader storage.MessageReader, timeout time.Duration) *StorageCommitReader {
-	return &StorageCommitReader{reader: reader, timeout: timeout}
+func newStorageCommitReader(reader storage.MessageReader, timeout time.Duration) commitReader {
+	return &storageCommitReader{reader: reader, timeout: timeout}
 }
 
-func (cr *StorageCommitReader) GetCommit(ctx context.Context, cid cid.Cid) (commit, error){
+func (cr *storageCommitReader) GetCommit(ctx context.Context, cid cid.Cid) (commit, error) {
 	ctxTimeout, cancel := context.WithTimeout(ctx, cr.timeout)
 	defer cancel()
 	unmarshallable, err := cr.reader.Read(ctxTimeout, cid)
@@ -65,7 +65,7 @@ func (cr *StorageCommitReader) GetCommit(ctx context.Context, cid cid.Cid) (comm
 		return commit{}, fmt.Errorf("read commit message from storage: %w", err)
 	}
 	pbCommit := &pdclpb.Commit{}
-	if err := unmarshallable.Unmarshall(pbCommit); err != nil{
+	if err := unmarshallable.Unmarshall(pbCommit); err != nil {
 		return commit{}, fmt.Errorf("unmarshall to commit proto: %w", err)
 	}
 
@@ -77,18 +77,14 @@ func (cr *StorageCommitReader) GetCommit(ctx context.Context, cid cid.Cid) (comm
 	return domainCommit, nil
 }
 
-type FakeCommitReader struct{
+type fakeCommitReader struct {
 	Commits map[cid.Cid]commit
 }
 
-func (f FakeCommitReader) GetCommit(ctx context.Context, cid cid.Cid) (commit, error) {
+func (f fakeCommitReader) GetCommit(ctx context.Context, cid cid.Cid) (commit, error) {
 	c, exists := f.Commits[cid]
-	if !exists{
-		return commit{}, ErrCommitNotFound
+	if !exists {
+		return commit{}, errCommitNotFound
 	}
 	return c, nil
 }
-
-
-
-

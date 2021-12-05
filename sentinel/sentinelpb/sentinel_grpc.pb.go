@@ -4,6 +4,7 @@ package sentinelpb
 
 import (
 	context "context"
+
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -60,12 +61,12 @@ type SentinelServer interface {
 }
 
 // UnimplementedSentinelServer must be embedded to have forward compatible implementations.
-type UnimplementedSentinelServer struct {
-}
+type UnimplementedSentinelServer struct{}
 
 func (UnimplementedSentinelServer) Publish(context.Context, *PublishRequest) (*PublishResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Publish not implemented")
 }
+
 func (UnimplementedSentinelServer) GetHeadCID(context.Context, *GetHeadCIDRequest) (*GetHeadCIDResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetHeadCID not implemented")
 }
