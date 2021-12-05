@@ -1,4 +1,11 @@
 {
+  "bumpFiles": [
+    {
+      "filename": "VERSION.txt",
+      "type": "plain-text"
+    }
+  ],
+  "packageFiles": [],
   "types": [
     {
       "type": "feat",
@@ -26,7 +33,7 @@
     },
     {
       "type": "perf",
-      "hidden": true
+      "section": "Performance"
     },
     {
       "type": "test",

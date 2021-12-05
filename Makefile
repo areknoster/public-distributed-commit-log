@@ -2,7 +2,7 @@
 install-tools: | install-go-tools install-npm-tools
 
 install-npm-tools:
-	npm install
+	npm install -g standard-version
 
 install-go-tools:
 	go mod download -x
@@ -19,13 +19,10 @@ format-add-trailing-newline:
 	git grep -zIl ''  | while IFS= read -rd '' f; do tail -c1 < "$$f" | read -r _ || echo >> "$$f"; done
 
 .PHONY: lint lint-go lint-commits
-lint: | lint-go lint-commits
+lint: | lint-go
 
 lint-go:
 	golangci-lint run
-
-lint-commits:
-	npm run commitlint
 
 .PHONY: generate-code generate-go-code
 generate-code: | generate-go-code format
@@ -35,4 +32,4 @@ generate-go-code:
 
 .PHONY: release
 release:
-	npm run release
+	npx standard-version
