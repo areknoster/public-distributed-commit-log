@@ -13,10 +13,14 @@ format-add-trailing-newline:
 
 lint:
 	golangci-lint run
+	npx commitlint --from HEAD~1
 
 generate-code: | generate-go-code format
 
 generate-go-code:
 	go generate ./...
 
-.PHONY: install-go-tools format format-go format-add-trailing-newline lint generate-go-code generate-code
+release:
+	npx standard-version
+
+.PHONY: install-go-tools format format-go format-add-trailing-newline lint generate-go-code generate-code release
