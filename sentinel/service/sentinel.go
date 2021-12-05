@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/areknoster/public-distributed-commit-log/thead"
 
 	"github.com/ipfs/go-cid"
 	"github.com/rs/zerolog/log"
@@ -12,25 +11,29 @@ import (
 
 	"github.com/areknoster/public-distributed-commit-log/sentinel"
 	"github.com/areknoster/public-distributed-commit-log/sentinel/sentinelpb"
+	"github.com/areknoster/public-distributed-commit-log/thead"
 )
 
+// Service implements sentinel GRPC server
 type Service struct {
 	sentinelpb.UnimplementedSentinelServer
-	validator sentinel.Validator
-	pinner    sentinel.Pinner
+	validator  sentinel.Validator
+	pinner     sentinel.Pinner
 	commiter   sentinel.Commiter
 	headReader thead.Reader
 }
 
-func New(validator sentinel.Validator, pinner sentinel.Pinner, commiter sentinel.Commiter,headReader thead.Reader) *Service {
+// New initializes sentinel service
+func New(validator sentinel.Validator, pinner sentinel.Pinner, commiter sentinel.Commiter, headReader thead.Reader) *Service {
 	return &Service{
-		validator: validator,
-		pinner: pinner,
-		commiter: commiter,
+		validator:  validator,
+		pinner:     pinner,
+		commiter:   commiter,
 		headReader: headReader,
 	}
 }
 
+// Publish is GRPC method that producers can use to add message to topic
 func (s *Service) Publish(ctx context.Context, req *sentinelpb.PublishRequest) (*sentinelpb.PublishResponse, error) {
 	logger := log.With().Str("cid", req.Cid).Logger()
 	cid, err := cid.Decode(req.Cid)
@@ -59,8 +62,8 @@ func validationErrorToProtoStatus(err error) error {
 	return status.Error(codes.InvalidArgument, err.Error())
 }
 
-
-func (s *Service) GetHeadCID(ctx context.Context, req *sentinelpb.GetHeadCIDRequest) (*sentinelpb.GetHeadCIDResponse, error){
+// GetHeadCID can be used by consumers to fetch head from sentinel
+func (s *Service) GetHeadCID(ctx context.Context, req *sentinelpb.GetHeadCIDRequest) (*sentinelpb.GetHeadCIDResponse, error) {
 	headCID, err := s.headReader.ReadHead(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("get head CID: %w", err)

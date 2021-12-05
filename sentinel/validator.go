@@ -6,6 +6,7 @@ import (
 	"github.com/ipfs/go-cid"
 )
 
+// Validator validates message contents in sentinel. It should be implemented by topic owner.
 type Validator interface {
 	Validate(ctx context.Context, cid cid.Cid) error
 }

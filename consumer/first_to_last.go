@@ -3,18 +3,19 @@ package consumer
 import (
 	"context"
 	"fmt"
-	"github.com/ipfs/go-cid"
-	"golang.org/x/sync/errgroup"
 	"time"
 
-	"github.com/areknoster/public-distributed-commit-log/thead"
-	"github.com/areknoster/public-distributed-commit-log/storage"
+	"github.com/ipfs/go-cid"
 	"github.com/rs/zerolog/log"
+	"golang.org/x/sync/errgroup"
+
+	"github.com/areknoster/public-distributed-commit-log/storage"
+	"github.com/areknoster/public-distributed-commit-log/thead"
 )
 
 type FirstToLastConsumerConfig struct {
-	PollInterval     time.Duration
-	PollTimeout      time.Duration
+	PollInterval time.Duration
+	PollTimeout  time.Duration
 }
 
 type FirstToLastConsumer struct {
@@ -40,7 +41,7 @@ func (f *FirstToLastConsumer) Consume(globalCtx context.Context, handler Message
 			log.Debug().Msg("run poll")
 			pollTimer.Reset(f.config.PollInterval)
 			if err := f.pollWithTimeout(globalCtx, handler); err != nil {
-				return fmt.Errorf("poll messages: %w ",err)
+				return fmt.Errorf("poll messages: %w ", err)
 			}
 
 		}
@@ -72,7 +73,7 @@ func (f *FirstToLastConsumer) poll(ctx context.Context, handler MessageHandler) 
 	}
 
 	handleRunner := newFirstToLastHandleRunner(f.messageReader, handler, topicHead, currOffset)
-	if err := handleRunner.HandleCommits(ctx); err != nil{
+	if err := handleRunner.HandleCommits(ctx); err != nil {
 		return fmt.Errorf("handle commits: %w", err)
 	}
 	if err := f.consumerOffsetManager.SetHead(ctx, topicHead); err != nil {
@@ -95,17 +96,16 @@ func (f *FirstToLastConsumer) syncOffset() {
 type firstToLastHandleRunner struct {
 	headCID        cid.Cid
 	messageReader  storage.MessageReader
-	commitReader   CommitReader
+	commitReader   commitReader
 	handler        MessageHandler
 	consumerOffset cid.Cid
 	// todo: it would be much less error prone if we kept index of all correctly handled messages CIDs or sth like that
 }
 
-
 // todo: make those configurable
 const (
-	defaultCommitChanLen     = 10
-	defaultConcurrentHandles = 20
+	defaultCommitChanLen      = 10
+	defaultConcurrentHandles  = 20
 	defaultReadMessageTimeout = 5 * time.Second
 )
 
@@ -113,7 +113,7 @@ func newFirstToLastHandleRunner(
 	messageReader storage.MessageReader,
 	handler MessageHandler,
 	headCID, consumerOffset cid.Cid) *firstToLastHandleRunner {
-	commitReader := NewStorageCommitReader(messageReader, defaultReadMessageTimeout)
+	commitReader := newStorageCommitReader(messageReader, defaultReadMessageTimeout)
 
 	return &firstToLastHandleRunner{
 		headCID:        headCID,
@@ -127,15 +127,15 @@ func newFirstToLastHandleRunner(
 func (cl *firstToLastHandleRunner) HandleCommits(ctx context.Context) error {
 	group, ctx := errgroup.WithContext(ctx)
 	commitsChan := cl.traverseCommits(ctx, group)
-	messageCIDs := make(chan cid.Cid, 2 * defaultConcurrentHandles)
+	messageCIDs := make(chan cid.Cid, 2*defaultConcurrentHandles)
 	cl.addWorkers(ctx, group, messageCIDs)
 	group.Go(func() error {
 		defer close(messageCIDs)
 		var lastCommit commit
 		for lastCommit = range commitsChan {
-			for _, messageCid := range lastCommit.Messages{
+			for _, messageCid := range lastCommit.Messages {
 				select {
-				case <- ctx.Done():
+				case <-ctx.Done():
 					return fmt.Errorf("did not handle all messages - context is done")
 				default:
 					messageCIDs <- messageCid
@@ -182,15 +182,15 @@ func (cl *firstToLastHandleRunner) traverseCommits(ctx context.Context, group *e
 	return commitsChan
 }
 
-func (cl *firstToLastHandleRunner) addWorkers(ctx context.Context, group *errgroup.Group, messageCIDs <-chan cid.Cid){
-	for i := 0; i < defaultConcurrentHandles; i++{
+func (cl *firstToLastHandleRunner) addWorkers(ctx context.Context, group *errgroup.Group, messageCIDs <-chan cid.Cid) {
+	for i := 0; i < defaultConcurrentHandles; i++ {
 		group.Go(func() error {
 			for messageCID := range messageCIDs {
 				unmarshallable, err := cl.messageReader.Read(ctx, messageCID)
-				if err != nil{
+				if err != nil {
 					return fmt.Errorf("can't read message: %w", err)
 				}
-				if err := cl.handler.Handle(ctx, unmarshallable); err != nil{
+				if err := cl.handler.Handle(ctx, unmarshallable); err != nil {
 					return fmt.Errorf("error when handling message: %w", err)
 				}
 			}
@@ -198,5 +198,3 @@ func (cl *firstToLastHandleRunner) addWorkers(ctx context.Context, group *errgro
 		})
 	}
 }
-
-

@@ -7,10 +7,10 @@ import (
 	"github.com/ipfs/go-cid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/areknoster/public-distributed-commit-log/thead"
 	"github.com/areknoster/public-distributed-commit-log/pdclpb"
 	"github.com/areknoster/public-distributed-commit-log/sentinel"
 	"github.com/areknoster/public-distributed-commit-log/storage"
+	"github.com/areknoster/public-distributed-commit-log/thead"
 )
 
 // Instant Commiter adds commit after every single received commit
