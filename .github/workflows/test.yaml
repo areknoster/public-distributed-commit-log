@@ -1,0 +1,39 @@
+name: Test
+
+on: push
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 2
+
+    - name: Setup Go environment
+      uses: actions/setup-go@v2.1.4
+      with:
+        go-version: 1.17.2
+
+    - name: Install tool for test summary
+      uses: jaxxstorm/action-install-gh-release@v1.3.1
+      with:
+        repo: gotestyourself/gotestsum
+        tag: v1.7.0
+      env:
+        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+
+    - name: Test
+      run: |
+        #!/bin/bash
+        set -e
+        gotestsum --format=testname --junitfile test-report.xml -- --cover -p=1 --timeout 5m ./...
+
+    - name: Publish Unit Test Results
+      uses: EnricoMi/publish-unit-test-result-action@v1
+      if: always()
+      with:
+        files: test-report.xml
