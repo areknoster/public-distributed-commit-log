@@ -54,7 +54,7 @@ func (s *ProduceConsumeTestSuite) SetupSuite() {
 }
 
 func (s *ProduceConsumeTestSuite) setupSentinel() {
-	contentStorage := memorystorage.Storage{}
+	contentStorage := &memorystorage.Storage{}
 	s.messageStorage = storage.NewProtoMessageStorage(contentStorage)
 	validator := &mockValidator{
 		messageStorage: s.messageStorage,
@@ -134,7 +134,7 @@ func (s *ProduceConsumeTestSuite) consumeFromStart(ctx context.Context, messages
 			idsChan <- testMessage.Id
 			return nil
 		}))
-		s.Assert().NoError(err)
+		s.Assert().ErrorIs(err, consumer.ErrContextDone)
 		close(idsChan)
 	}()
 

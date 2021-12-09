@@ -35,8 +35,7 @@ func (f *FirstToLastConsumer) Consume(globalCtx context.Context, handler Message
 	for {
 		select {
 		case <-globalCtx.Done():
-			log.Info().Msg("finished consuming because context is done")
-			return nil
+			return ErrContextDone
 		case <-pollTimer.C:
 			log.Debug().Msg("run poll")
 			pollTimer.Reset(f.config.PollInterval)
@@ -168,7 +167,7 @@ func (cl *firstToLastHandleRunner) traverseCommits(ctx context.Context, group *e
 				return nil
 			}
 			if currentCommit.Previous == cid.Undef {
-				return fmt.Errorf("got to last topic commit and never found consumer offset")
+				return nil
 			}
 			commit, err := cl.commitReader.GetCommit(ctx, currentCommit.Previous)
 			if err != nil {
