@@ -22,6 +22,7 @@ func (m MessageHandlerFunc) Handle(ctx context.Context, message storage.ProtoUnm
 
 // Consumer defines an interface for blocking action for listening for incoming events
 // and invoking handler on each of them
+// when Consumer returns, it is always one of Error defined values wrapped
 type Consumer interface {
 	Consume(globalCtx context.Context, handler MessageHandler) error
 }

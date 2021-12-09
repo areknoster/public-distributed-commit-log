@@ -5,8 +5,9 @@ import (
 	"fmt"
 
 	"github.com/ipfs/go-cid"
-	"github.com/multiformats/go-multihash"
 	"google.golang.org/protobuf/proto"
+
+	"github.com/areknoster/public-distributed-commit-log/pdcl"
 )
 
 // MessageWriter persists message with CID accessor
@@ -63,15 +64,14 @@ func (p *ProtoMessageStorage) Write(ctx context.Context, message proto.Message) 
 		return cid.Cid{}, fmt.Errorf("marshall message: %w", err)
 	}
 
-	hash, err := multihash.Sum(encoded, multihash.SHA2_256, -1)
+	messageCID, err := pdcl.CID(encoded)
 	if err != nil {
-		return cid.Cid{}, fmt.Errorf("get SHA256 multihash sum from mashalled message: %s", err)
+		return cid.Cid{}, fmt.Errorf("get CID from mashalled message: %s", err)
 	}
-	cidValue := cid.NewCidV1(multihash.SHA2_256, hash)
-	if err := p.contentStorage.Write(ctx, encoded, cidValue); err != nil {
+	if err := p.contentStorage.Write(ctx, encoded, messageCID); err != nil {
 		return cid.Cid{}, fmt.Errorf("write message to content storage: %w", err)
 	}
-	return cidValue, nil
+	return messageCID, nil
 }
 
 type unmarshallable struct {
