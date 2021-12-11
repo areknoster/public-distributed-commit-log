@@ -2,7 +2,8 @@
 install-tools: | install-go-tools install-npm-tools
 
 install-npm-tools:
-	npm install
+	npm install -g @commitlint/cli @commitlint/config-conventional
+	npm install -g standard-version
 
 install-go-tools:
 	go mod download -x
@@ -25,7 +26,7 @@ lint-go:
 	golangci-lint run
 
 lint-commits:
-	npm run commitlint
+	commitlint --from main --config commitlint.config.yaml
 
 .PHONY: generate-code generate-go-code
 generate-code: | generate-go-code format
