@@ -36,4 +36,4 @@ generate-go-code:
 
 .PHONY: release
 release:
-	npm run standard-version
+	standard-version
