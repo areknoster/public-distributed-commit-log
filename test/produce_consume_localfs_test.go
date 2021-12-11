@@ -24,7 +24,7 @@ import (
 	"github.com/areknoster/public-distributed-commit-log/thead/sentinel"
 )
 
-type ProduceConsumeTestSuite struct {
+type ProduceConsumeLocalFSTestSuite struct {
 	suite.Suite
 	messageStorage storage.MessageStorage
 	grpcServer     *grpc.Server
@@ -34,7 +34,7 @@ type ProduceConsumeTestSuite struct {
 	globalCtx      context.Context
 }
 
-func (s *ProduceConsumeTestSuite) SetupSuite() {
+func (s *ProduceConsumeLocalFSTestSuite) SetupSuite() {
 	s.setupSentinel()
 	s.setupProducer()
 	s.setupConsumerDependencies()
@@ -53,7 +53,7 @@ func (s *ProduceConsumeTestSuite) SetupSuite() {
 	})
 }
 
-func (s *ProduceConsumeTestSuite) setupSentinel() {
+func (s *ProduceConsumeLocalFSTestSuite) setupSentinel() {
 	contentStorage := &memorystorage.Storage{}
 	s.messageStorage = storage.NewProtoMessageStorage(contentStorage)
 	validator := &mockValidator{
@@ -73,7 +73,7 @@ func (s *ProduceConsumeTestSuite) setupSentinel() {
 	sentinelpb.RegisterSentinelServer(grpcServer, sentinelService)
 }
 
-func (s *ProduceConsumeTestSuite) setupProducer() {
+func (s *ProduceConsumeLocalFSTestSuite) setupProducer() {
 	conn, err := grpc.Dial(grpc.ConnConfig{
 		Host: "localhost",
 		Port: "8000",
@@ -83,11 +83,11 @@ func (s *ProduceConsumeTestSuite) setupProducer() {
 	s.producer = producer.NewMessageProducer(s.messageStorage, s.sentinelClient)
 }
 
-func (s *ProduceConsumeTestSuite) setupConsumerDependencies() {
+func (s *ProduceConsumeLocalFSTestSuite) setupConsumerDependencies() {
 	s.headReader = sentinel.New(s.sentinelClient)
 }
 
-func (s *ProduceConsumeTestSuite) newConsumer(offset cid.Cid) *consumer.FirstToLastConsumer {
+func (s *ProduceConsumeLocalFSTestSuite) newConsumer(offset cid.Cid) *consumer.FirstToLastConsumer {
 	return consumer.NewFirstToLastConsumer(
 		s.headReader,
 		memory.NewHeadManager(offset),
@@ -98,7 +98,7 @@ func (s *ProduceConsumeTestSuite) newConsumer(offset cid.Cid) *consumer.FirstToL
 		})
 }
 
-func (s *ProduceConsumeTestSuite) TestProduceConsume() {
+func (s *ProduceConsumeLocalFSTestSuite) TestProduceConsume() {
 	ctx, cancel := context.WithTimeout(s.globalCtx, 10*time.Second)
 	defer cancel()
 
@@ -115,7 +115,7 @@ func (s *ProduceConsumeTestSuite) TestProduceConsume() {
 	})
 }
 
-func (s *ProduceConsumeTestSuite) consumeFromStart(ctx context.Context, messages []*testpb.Message, idSet map[int64]struct{}) {
+func (s *ProduceConsumeLocalFSTestSuite) consumeFromStart(ctx context.Context, messages []*testpb.Message, idSet map[int64]struct{}) {
 	for _, message := range messages {
 		s.Require().NoError(s.producer.Produce(ctx, message))
 	}
@@ -163,6 +163,6 @@ func (m *mockValidator) Validate(ctx context.Context, cid cid.Cid) error {
 }
 
 func TestProduceConsumeTestSuite(t *testing.T) {
-	ts := &ProduceConsumeTestSuite{}
+	ts := &ProduceConsumeLocalFSTestSuite{}
 	suite.Run(t, ts)
 }

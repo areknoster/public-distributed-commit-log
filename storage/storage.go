@@ -33,15 +33,11 @@ type MessageStorage interface {
 
 type ProtoMessageStorage struct {
 	contentStorage ContentStorage
-	marshalOpts    proto.MarshalOptions
 }
 
 func NewProtoMessageStorage(contentStorage ContentStorage) *ProtoMessageStorage {
 	return &ProtoMessageStorage{
 		contentStorage: contentStorage,
-		marshalOpts: proto.MarshalOptions{
-			Deterministic: true,
-		},
 	}
 }
 
@@ -50,16 +46,11 @@ func (p *ProtoMessageStorage) Read(ctx context.Context, cid cid.Cid) (ProtoUnmar
 	if err != nil {
 		return nil, fmt.Errorf("read message from content storage: %w", err)
 	}
-	return unmarshallable{
-		protoBuf: content,
-		options: proto.UnmarshalOptions{
-			DiscardUnknown: true,
-		},
-	}, nil
+	return ProtoDecode(content), nil
 }
 
 func (p *ProtoMessageStorage) Write(ctx context.Context, message proto.Message) (cid.Cid, error) {
-	encoded, err := p.marshalOpts.Marshal(message)
+	encoded, err := ProtoEncode(message)
 	if err != nil {
 		return cid.Cid{}, fmt.Errorf("marshall message: %w", err)
 	}
@@ -72,6 +63,21 @@ func (p *ProtoMessageStorage) Write(ctx context.Context, message proto.Message) 
 		return cid.Cid{}, fmt.Errorf("write message to content storage: %w", err)
 	}
 	return messageCID, nil
+}
+
+func ProtoEncode(message proto.Message) ([]byte, error) {
+	return proto.MarshalOptions{
+		Deterministic: true,
+	}.Marshal(message)
+}
+
+func ProtoDecode(content []byte) ProtoUnmarshallable {
+	return unmarshallable{
+		protoBuf: content,
+		options: proto.UnmarshalOptions{
+			DiscardUnknown: true,
+		},
+	}
 }
 
 type unmarshallable struct {
