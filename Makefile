@@ -36,4 +36,4 @@ generate-go-code:
 
 .PHONY: release
 release:
-	standard-version
+	standard-version -s
