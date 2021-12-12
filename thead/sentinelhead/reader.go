@@ -1,4 +1,4 @@
-package sentinel
+package sentinelhead
 
 import (
 	"context"
