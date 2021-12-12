@@ -3,10 +3,13 @@ syntax = "proto3";
 option go_package = "./;pdclpb";
 
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
 
-// SignedMessage can be used to
+// SignedMessage are used to verify the creator of given message.
+//   It can be used both for PDCL messages and commits.
 message SignedMessage {
-
+    google.protobuf.Any message = 1;
+    bytes signature = 2;
 }
 
 message Commit {

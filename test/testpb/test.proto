@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-option go_package = "./;testpb";
-
-message Message {
-  int64 id = 1;
-}

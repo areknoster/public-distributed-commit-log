@@ -15,11 +15,11 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/areknoster/public-distributed-commit-log/consumer"
+	"github.com/areknoster/public-distributed-commit-log/internal/testpb"
+	"github.com/areknoster/public-distributed-commit-log/internal/testutil"
 	"github.com/areknoster/public-distributed-commit-log/pdclpb"
 	"github.com/areknoster/public-distributed-commit-log/storage"
 	memorystorage "github.com/areknoster/public-distributed-commit-log/storage/memory"
-	"github.com/areknoster/public-distributed-commit-log/test/testpb"
-	"github.com/areknoster/public-distributed-commit-log/test/testutil"
 	"github.com/areknoster/public-distributed-commit-log/thead"
 	"github.com/areknoster/public-distributed-commit-log/thead/memory"
 )
@@ -106,7 +106,7 @@ func TestLinearIncremental(t *testing.T) {
 
 		t.Run("message from offset should not be read", func(t *testing.T) {
 			mockReader := newMockMessageReader(t)
-			mockReader.RegisterMessage(&testpb.Message{Id: math.MaxInt64})
+			mockReader.RegisterMessage(&testpb.Message{IdIncremental: math.MaxInt64})
 			head := mockReader.Commit(cid.Undef)
 
 			th := newTestHandler(t)
@@ -272,10 +272,10 @@ func (th *testHandler) Handle(ctx context.Context, message storage.ProtoUnmarsha
 	testMessage := &testpb.Message{}
 	require.NoError(th.t, message.Unmarshall(testMessage))
 
-	currentValue, found := th.messages.Load(testMessage.Id)
+	currentValue, found := th.messages.Load(testMessage.IdIncremental)
 	require.True(th.t, found, "handle on unknown message")
 	incr := currentValue.(int) + 1
-	th.messages.Store(testMessage.Id, incr)
+	th.messages.Store(testMessage.IdIncremental, incr)
 	return nil
 }
 
@@ -288,12 +288,12 @@ func (th *testHandler) AssertAllHandledOnce() {
 
 func (th *testHandler) Add(m *testpb.Message) {
 	v := int(0)
-	th.messages.Store(m.Id, v)
+	th.messages.Store(m.IdIncremental, v)
 }
 
 func (th *testHandler) Next() *testpb.Message {
 	th.index++
-	return &testpb.Message{Id: th.index}
+	return &testpb.Message{IdIncremental: th.index}
 }
 
 func (th *testHandler) AddNext() *testpb.Message {

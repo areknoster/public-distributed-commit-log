@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package testpb;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "./;testpb";
+
+message Message {
+  int64 id_incremental = 1;
+  string uuid = 2;
+  google.protobuf.Timestamp created = 3;
+}

@@ -25,6 +25,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
+    - uses: protocol/download-ipfs-distribution-action@master
+    - uses: protocol/start-ipfs-daemon-action@master
 
     - name: Test
       run: |

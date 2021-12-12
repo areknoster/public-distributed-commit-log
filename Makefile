@@ -1,6 +1,10 @@
+.PHONY: unit-test
+unit-test:
+	go test -short -count=1 ./...
+
+
 .PHONY: install-tools install-npm-tools install-go-tools
 install-tools: | install-go-tools install-npm-tools
-
 install-npm-tools:
 	npm install -g @commitlint/cli @commitlint/config-conventional
 	npm install -g standard-version
