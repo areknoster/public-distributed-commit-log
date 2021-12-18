@@ -8,8 +8,11 @@ import (
 	"github.com/ipfs/go-cid"
 )
 
-// Storage is in-memory implementation of content storage. Should be used only for testing
+func NewStorage() *Storage {
+	return new(Storage)
+}
 
+// Storage is in-memory implementation of content storage. Should be used only for testing
 type Storage struct {
 	smap sync.Map
 }
