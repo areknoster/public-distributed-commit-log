@@ -3,6 +3,7 @@ module github.com/areknoster/public-distributed-commit-log
 go 1.17
 
 require (
+	github.com/benbjohnson/clock v1.3.0
 	github.com/daixiang0/gci v0.2.9
 	github.com/golangci/golangci-lint v1.43.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
@@ -13,7 +14,7 @@ require (
 	github.com/sethvargo/go-limiter v0.7.2
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	google.golang.org/grpc v1.40.0
+	google.golang.org/grpc v1.42.0
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.1.0
 	google.golang.org/protobuf v1.27.1
 	mvdan.cc/gofumpt v0.2.0
@@ -30,7 +31,6 @@ require (
 	github.com/alexkohler/prealloc v1.0.0 // indirect
 	github.com/ashanbrown/forbidigo v1.2.0 // indirect
 	github.com/ashanbrown/makezero v0.0.0-20210520155254-b6261585ddde // indirect
-	github.com/benbjohnson/clock v1.3.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bkielbasa/cyclop v1.2.0 // indirect
 	github.com/blizzy78/varnamelen v0.3.0 // indirect

@@ -18,6 +18,7 @@ type MessageReader interface {
 }
 
 // ProtoUnmarshallable can be used to deserialize message data to proto structure
+// todo: refactor this to just passing generic type when go 1.18 is out
 type ProtoUnmarshallable interface {
 	Unmarshall(message proto.Message) error
 }
