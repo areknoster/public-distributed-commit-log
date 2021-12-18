@@ -45,14 +45,20 @@ func (p *ProtoMessageStorage) Write(ctx context.Context, message proto.Message) 
 	return messageCID, nil
 }
 
+func GetMarshallOpts() proto.MarshalOptions {
+	return marshallOpts
+}
+
+var marshallOpts = proto.MarshalOptions{
+	Deterministic: true,
+}
+
 func ProtoEncode(message proto.Message) ([]byte, error) {
-	return proto.MarshalOptions{
-		Deterministic: true,
-	}.Marshal(message)
+	return marshallOpts.Marshal(message)
 }
 
 func ProtoDecode(content []byte) ProtoUnmarshallable {
-	return unmarshallable{
+	return protobufUnmarshallable{
 		protoBuf: content,
 		options: proto.UnmarshalOptions{
 			DiscardUnknown: true,
@@ -60,11 +66,11 @@ func ProtoDecode(content []byte) ProtoUnmarshallable {
 	}
 }
 
-type unmarshallable struct {
+type protobufUnmarshallable struct {
 	protoBuf []byte
 	options  proto.UnmarshalOptions
 }
 
-func (u unmarshallable) Unmarshall(message proto.Message) error {
+func (u protobufUnmarshallable) Unmarshall(message proto.Message) error {
 	return u.options.Unmarshal(u.protoBuf, message)
 }
