@@ -1,8 +1,32 @@
+# --------- BUILD & RELEASE ------------
+COMMIT = $(shell git rev-parse HEAD)
+.PHONY: build build-docker build-linux
+build-linux:
+	mkdir -p bin/linux
+	GOARCH=amd64 GOOS=linux go build -o bin/linux ./cmd/...
+
+build-darwin:
+	mkdir -p bin/darwin
+	GOARCH=amd64 GOOS=darwin go build -o bin/darwin ./cmd/...
+
+build: build-linux build-darwin build-docker
+
+build-docker: build-linux
+	docker build -t pdcl-acceptance-sentinel:$(COMMIT) -f .docker/Dockerfile bin
+
+.PHONY: release
+release:
+	standard-version -s
+
+clean:
+	rm bin/*
+
+# --------- TESTS ------------
 .PHONY: unit-test
 unit-test:
 	go test -short -count=1 ./...
 
-
+# --------- TOOLS ------------
 .PHONY: install-tools install-npm-tools install-go-tools
 install-tools: | install-go-tools install-npm-tools
 install-npm-tools:
@@ -13,6 +37,7 @@ install-go-tools:
 	go mod download -x
 	cat dev/tools.go | grep _ | grep \".*\" -o | xargs -tI % go install %
 
+# --------- FORMAT & LINT ------------
 .PHONY: format format-go format-add-trailing-newline
 format: format-go format-add-trailing-newline
 
@@ -32,12 +57,10 @@ lint-go:
 lint-commits:
 	commitlint --from main --config commitlint.config.yaml
 
+
+# --------- CODEGEN ------------
 .PHONY: generate-code generate-go-code
 generate-code: | generate-go-code format
 
 generate-go-code:
 	go generate ./...
-
-.PHONY: release
-release:
-	standard-version -s

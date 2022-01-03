@@ -16,7 +16,7 @@ import (
 )
 
 type Config struct {
-	IPFSDaemonURL string
+	IPFSDaemonURL string `envconfig:"IPFS_DAEMON_URL" required:"true"`
 }
 
 // Storage is IPFS-based storage.Storage interface implementation

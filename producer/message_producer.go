@@ -11,12 +11,12 @@ import (
 )
 
 type MessageProducer struct {
-	storage        storage.MessageStorage
+	storage        storage.MessageWriter
 	sentinelClient sentinelpb.SentinelClient
 }
 
-func NewMessageProducer(storage storage.MessageStorage, sentinelClient sentinelpb.SentinelClient) *MessageProducer {
-	return &MessageProducer{storage: storage, sentinelClient: sentinelClient}
+func NewMessageProducer(writer storage.MessageWriter, sentinelClient sentinelpb.SentinelClient) *MessageProducer {
+	return &MessageProducer{storage: writer, sentinelClient: sentinelClient}
 }
 
 func (m *MessageProducer) Produce(ctx context.Context, message proto.Message) error {
