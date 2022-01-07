@@ -16,8 +16,8 @@ import (
 	"github.com/areknoster/public-distributed-commit-log/thead"
 )
 
-// IntervalCommiter adds commit at given intervals.
-type IntervalCommiter struct {
+// IntervalCommitter adds commit at given intervals.
+type IntervalCommitter struct {
 	headManager    thead.Manager
 	messageStorage storage.MessageStorage
 	pinner         sentinel.Pinner
@@ -28,9 +28,9 @@ type IntervalCommiter struct {
 	uncommitted []cid.Cid
 }
 
-func NewInterval(headManager thead.Manager, messageStorage storage.MessageStorage, pinner sentinel.Pinner,
-	ticker *clock.Ticker) *IntervalCommiter {
-	ic := &IntervalCommiter{
+func NewIntervalCommitter(headManager thead.Manager, messageStorage storage.MessageStorage, pinner sentinel.Pinner,
+	ticker *clock.Ticker) *IntervalCommitter {
+	ic := &IntervalCommitter{
 		headManager:    headManager,
 		messageStorage: messageStorage,
 		pinner:         pinner,
@@ -40,10 +40,12 @@ func NewInterval(headManager thead.Manager, messageStorage storage.MessageStorag
 	return ic
 }
 
-func (i *IntervalCommiter) run() {
+func (i *IntervalCommitter) run() {
 	for {
 		<-i.ticker.C
 		i.mu.Lock()
+		// TODO: this blocks adding new messages when committing the old ones.
+		// This should be decoupled.
 		if err := i.commit(); err != nil {
 			log.Error().Err(err).Msg("committing messages")
 			i.mu.Unlock()
@@ -54,7 +56,7 @@ func (i *IntervalCommiter) run() {
 	}
 }
 
-func (i *IntervalCommiter) commit() error {
+func (i *IntervalCommitter) commit() error {
 	if len(i.uncommitted) == 0 {
 		log.Debug().Msg("nothing to commit")
 		return nil
@@ -90,7 +92,7 @@ func (i *IntervalCommiter) commit() error {
 	return nil
 }
 
-func (i *IntervalCommiter) Add(ctx context.Context, cid cid.Cid) error {
+func (i *IntervalCommitter) Add(ctx context.Context, cid cid.Cid) error {
 	i.mu.Lock()
 	defer i.mu.Unlock()
 	i.uncommitted = append(i.uncommitted, cid)
