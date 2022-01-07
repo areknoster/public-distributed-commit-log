@@ -14,6 +14,7 @@ import (
 	"github.com/areknoster/public-distributed-commit-log/grpc"
 	"github.com/areknoster/public-distributed-commit-log/internal/testpb"
 	"github.com/areknoster/public-distributed-commit-log/producer"
+	"github.com/areknoster/public-distributed-commit-log/ratelimiting"
 	"github.com/areknoster/public-distributed-commit-log/sentinel/commiter"
 	"github.com/areknoster/public-distributed-commit-log/sentinel/pinner"
 	"github.com/areknoster/public-distributed-commit-log/sentinel/sentinelpb"
@@ -67,7 +68,7 @@ func (s *ProduceConsumeTestSuite) setupSentinel() {
 	grpcServer, err := grpc.NewServer(grpc.ServerConfig{
 		Host: "localhost",
 		Port: "8000",
-	})
+	}, ratelimiting.NewAlwaysAllowLimiter())
 	s.grpcServer = grpcServer
 	s.Require().NoError(err)
 	sentinelpb.RegisterSentinelServer(grpcServer, sentinelService)
