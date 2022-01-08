@@ -11,8 +11,9 @@ build-darwin:
 
 build: build-linux build-darwin build-docker
 
-build-docker: build-linux
-	docker build -t pdcl-acceptance-sentinel:$(COMMIT) -f .docker/Dockerfile bin
+build-docker:
+	docker build -t pdcl-acceptance-sentinel:$(COMMIT) .
+	docker tag pdcl-acceptance-sentinel:$(COMMIT) pdcl-acceptance-sentinel:latest
 
 .PHONY: release
 release:

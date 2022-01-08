@@ -24,24 +24,18 @@ jobs:
         with:
           credentials_json: ${{ secrets.GCLOUD_SERVICE_KEY }}
 
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v0
-
-      - uses: actions/setup-go@v2
-        with:
-          go-version: 1.17
-
-      - name: Build apps
-        run: make build-linux
-
       - name: Build Image
         run: |-
-          docker build -t eu.gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA -f .docker/Dockerfile bin
+          IMAGE_NAME=eu.gcr.io/$PROJECT_ID/$SERVICE_NAME
+          docker build -t $IMAGE_NAME:$GITHUB_SHA .
+          docker tag $IMAGE_NAME:$GITHUB_SHA $IMAGE_NAME:latest
       # Configure docker to use the gcloud command-line tool as a credential helper
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0
       - name: Configure registry
         run: |
           gcloud auth configure-docker -q
       # Push image to Google Container Registry
       - name: Push
         run: |-
-          docker push eu.gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA
+          docker push eu.gcr.io/$PROJECT_ID/$SERVICE_NAME --all-tags

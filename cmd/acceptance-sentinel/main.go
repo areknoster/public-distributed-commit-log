@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/ipfs/go-cid"
-	shell "github.com/ipfs/go-ipfs-api"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog/log"
 
@@ -29,7 +28,7 @@ func main() {
 		log.Fatal().Err(err).Msg("can't process environment variables for config")
 	}
 
-	storage := daemonstorage.NewStorage(shell.NewShell(config.DaemonStorage.IPFSDaemonURL))
+	storage := daemonstorage.NewStorage(daemonstorage.NewShell(config.DaemonStorage))
 	messageValidator, err := validator.New(storage, config.Validator)
 	if err != nil {
 		log.Panic().Err(err).Msg("initialize message validator")

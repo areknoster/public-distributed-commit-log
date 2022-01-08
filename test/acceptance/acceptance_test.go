@@ -3,7 +3,6 @@ package acceptance
 import (
 	"testing"
 
-	"github.com/ipfs/go-ipfs-api"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/stretchr/testify/require"
 
@@ -42,8 +41,7 @@ func initSentinelClient(t *testing.T, config Config) sentinelpb.SentinelClient {
 }
 
 func initStorage(t *testing.T, config Config) storage.MessageStorage {
-	sh := shell.NewShell(config.daemon.IPFSDaemonURL)
-	return daemonstorage.NewStorage(sh)
+	return daemonstorage.NewStorage(daemonstorage.NewShell(config.daemon))
 }
 
 func initConfig(t *testing.T) Config {
