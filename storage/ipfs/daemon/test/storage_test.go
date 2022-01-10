@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/areknoster/public-distributed-commit-log/internal/testpb"
 	. "github.com/areknoster/public-distributed-commit-log/storage/ipfs/daemon"
+	"github.com/areknoster/public-distributed-commit-log/test/testpb"
 )
 
 func TestStorage_ReadWrite(t *testing.T) {

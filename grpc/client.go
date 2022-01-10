@@ -7,7 +7,8 @@ import (
 )
 
 type ConnConfig struct {
-	Host, Port string
+	Host string `envconfig:"GRPC_HOST" default:"localhost"`
+	Port string `envconfig:"GRPC_PORT" default:"8000"`
 }
 
 func Dial(config ConnConfig) (*grpc.ClientConn, error) {
