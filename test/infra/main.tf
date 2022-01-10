@@ -5,12 +5,17 @@ terraform {
       version = "4.5.0"
     }
   }
+
+  backend "gcs" {
+    bucket  = "pdcl-testing-terraform-state"
+    prefix  = "terraform/state"
+  }
 }
 
 provider "google" {
   credentials = file(var.credentials_file)
 
-  project = var.project
-  region  = var.region
-  zone    = var.zone
+  project = local.project
+  region  = local.region
+  zone    = local.zone
 }
