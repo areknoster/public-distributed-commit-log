@@ -1,0 +1,41 @@
+name: Build and push to GCR
+on:
+  push:
+    branches:
+      - '**'
+
+jobs:
+  build:
+    name: Build image
+    runs-on: ubuntu-latest
+
+    env:
+      HASH: $(git rev-parse --short "$GITHUB_SHA")
+      BRANCH: ${GITHUB_REF##*/}
+      SERVICE_NAME: acceptance-sentinel
+      PROJECT_ID: ${{ secrets.PROJECT_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - id: auth
+        uses: google-github-actions/auth@v0
+        with:
+          credentials_json: ${{ secrets.GCLOUD_SERVICE_KEY }}
+
+      - name: Build Image
+        run: |-
+          IMAGE_NAME=eu.gcr.io/$PROJECT_ID/$SERVICE_NAME
+          docker build -t $IMAGE_NAME:$GITHUB_SHA .
+          docker tag $IMAGE_NAME:$GITHUB_SHA $IMAGE_NAME:latest
+      # Configure docker to use the gcloud command-line tool as a credential helper
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0
+      - name: Configure registry
+        run: |
+          gcloud auth configure-docker -q
+      # Push image to Google Container Registry
+      - name: Push
+        run: |-
+          docker push eu.gcr.io/$PROJECT_ID/$SERVICE_NAME --all-tags

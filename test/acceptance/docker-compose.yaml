@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  ipfs:
+    image: ipfs/go-ipfs:v0.11.0
+    environment:
+      - IPFS_PROFILE=server
+      - IPFS_PATH=/ipfsdata
+    volumes:
+      - ./data:/ipfsdata
+    ports:
+      - "4001:4001" # ipfs swarm host
+      - "127.0.0.1:8080:8080" # local gateway
+      - "127.0.0.1:5001:5001" # api server
+  sentinel:
+    build:
+      context: ../../bin
+      dockerfile: ../.docker/Dockerfile
+    environment:
+      IPFS_DAEMON_URL: "ipfs:5001"
+    ports:
+      - "8000:8000"

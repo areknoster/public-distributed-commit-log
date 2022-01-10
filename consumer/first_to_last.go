@@ -135,7 +135,7 @@ func (cl *firstToLastHandleRunner) HandleCommits(ctx context.Context) error {
 			for _, messageCid := range lastCommit.Messages {
 				select {
 				case <-ctx.Done():
-					return fmt.Errorf("did not handle all messages - context is done")
+					return fmt.Errorf("did not handle all messages: %w", ErrContextDone)
 				default:
 					messageCIDs <- messageCid
 				}

@@ -1,0 +1,9 @@
+*_test.go
+bin
+.*
+
+AUTHORS.md
+CONTRIBUTING.md
+LICENSE
+Makefile
+README.md

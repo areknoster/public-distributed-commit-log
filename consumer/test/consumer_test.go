@@ -68,7 +68,7 @@ func TestEdgeCases(t *testing.T) {
 				err := c.Consume(ctx, th)
 				assert.ErrorIs(t, err, consumer.ErrContextDone)
 			}()
-			time.Sleep(30 * time.Millisecond)
+			time.Sleep(10 * time.Millisecond)
 			mockReader.RegisterMessage(th.AddNext())
 			head = mockReader.Commit(head)
 			require.NoError(t, headManager.SetHead(ctx, head))
@@ -92,14 +92,14 @@ func TestLinearIncremental(t *testing.T) {
 				assert.ErrorIs(t, err, consumer.ErrContextDone)
 			}()
 			head := cid.Undef
-			for i := 0; i < 1000; i++ {
+			for i := 0; i < 100; i++ {
 				mockReader.RegisterMessage(th.AddNext())
 				head = mockReader.Commit(head)
 				require.NoError(t, headManager.SetHead(ctx, head))
 				time.Sleep(time.Millisecond)
 			}
 
-			time.Sleep(30 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 			cancel()
 			th.AssertAllHandledOnce()
 		})
@@ -122,7 +122,7 @@ func TestLinearIncremental(t *testing.T) {
 			head = mockReader.Commit(head)
 			require.NoError(t, headManager.SetHead(ctx, head))
 
-			time.Sleep(30 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 			cancel()
 			th.AssertAllHandledOnce() // would fail if the initial message is read
 		})
@@ -143,7 +143,7 @@ func TestRandomSizedCommits(t *testing.T) {
 				assert.ErrorIs(t, err, consumer.ErrContextDone)
 			}()
 			head := cid.Undef
-			for i := 0; i < 1000; i++ {
+			for i := 0; i < 100; i++ {
 				messagesInCommit := rand.Intn(100)
 				for j := 0; j < messagesInCommit; j++ {
 					mockReader.RegisterMessage(th.AddNext())
@@ -153,7 +153,7 @@ func TestRandomSizedCommits(t *testing.T) {
 				time.Sleep(5 * time.Millisecond)
 			}
 
-			time.Sleep(20 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 			cancel()
 			th.AssertAllHandledOnce()
 		})
@@ -251,8 +251,8 @@ type createConsumer func(initialOffset cid.Cid, messagesTree storage.MessageRead
 
 var createFirstToLastConsumer createConsumer = func(initialOffset cid.Cid, messagesTree storage.MessageReader, headReader thead.Reader) consumer.Consumer {
 	return consumer.NewFirstToLastConsumer(headReader, memory.NewHeadManager(initialOffset), messagesTree, consumer.FirstToLastConsumerConfig{
-		PollInterval: 10 * time.Millisecond,
-		PollTimeout:  10 * time.Millisecond,
+		PollInterval: 50 * time.Millisecond,
+		PollTimeout:  25 * time.Millisecond,
 	})
 }
 

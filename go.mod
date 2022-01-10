@@ -6,9 +6,11 @@ require (
 	github.com/benbjohnson/clock v1.3.0
 	github.com/daixiang0/gci v0.2.9
 	github.com/golangci/golangci-lint v1.43.0
+	github.com/google/uuid v1.3.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/ipfs/go-cid v0.1.0
 	github.com/ipfs/go-ipfs-api v0.3.0
+	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/multiformats/go-multihash v0.1.0
 	github.com/rs/zerolog v1.26.0
 	github.com/sethvargo/go-limiter v0.7.2
