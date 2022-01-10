@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/areknoster/public-distributed-commit-log/sentinel/sentinelpb"
@@ -11,12 +12,12 @@ import (
 )
 
 type MessageProducer struct {
-	storage        storage.MessageStorage
+	storage        storage.MessageWriter
 	sentinelClient sentinelpb.SentinelClient
 }
 
-func NewMessageProducer(storage storage.MessageStorage, sentinelClient sentinelpb.SentinelClient) *MessageProducer {
-	return &MessageProducer{storage: storage, sentinelClient: sentinelClient}
+func NewMessageProducer(writer storage.MessageWriter, sentinelClient sentinelpb.SentinelClient) *MessageProducer {
+	return &MessageProducer{storage: writer, sentinelClient: sentinelClient}
 }
 
 func (m *MessageProducer) Produce(ctx context.Context, message proto.Message) error {
@@ -24,6 +25,7 @@ func (m *MessageProducer) Produce(ctx context.Context, message proto.Message) er
 	if err != nil {
 		return fmt.Errorf("save message to storage: %w", err)
 	}
+	log.Info().Stringer("cid", cid).Msg("message stored")
 
 	_, err = m.sentinelClient.Publish(ctx, &sentinelpb.PublishRequest{Cid: cid.String()})
 	if err != nil {

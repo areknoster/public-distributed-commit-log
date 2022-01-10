@@ -1,4 +1,4 @@
-package test
+package itest
 
 import (
 	"context"
@@ -8,8 +8,8 @@ import (
 	shell "github.com/ipfs/go-ipfs-api"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/areknoster/public-distributed-commit-log/internal/testpb"
 	daemonstorage "github.com/areknoster/public-distributed-commit-log/storage/ipfs/daemon"
+	"github.com/areknoster/public-distributed-commit-log/test/testpb"
 )
 
 type MemoryProduceConsumeTestSuite struct {

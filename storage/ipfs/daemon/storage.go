@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net"
 
 	"github.com/ipfs/go-cid"
 	shell "github.com/ipfs/go-ipfs-api"
@@ -16,7 +17,12 @@ import (
 )
 
 type Config struct {
-	IPFSDaemonURL string
+	IPFSDaemonPort string `envconfig:"IPFS_DAEMON_PORT" default:"5001"`
+	IPFSDaemonHost string `envconfig:"IPFS_DAEMON_HOST" required:"true"`
+}
+
+func NewShell(config Config) *shell.Shell {
+	return shell.NewShell(net.JoinHostPort(config.IPFSDaemonHost, config.IPFSDaemonPort))
 }
 
 // Storage is IPFS-based storage.Storage interface implementation
