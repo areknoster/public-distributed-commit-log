@@ -32,7 +32,7 @@ jobs:
       run: |
         #!/bin/bash
         set -e
-        gotestsum --format=testname --junitfile test-report.xml -- --cover -p=1 --timeout 5m ./...
+        gotestsum --format=testname --junitfile test-report.xml -- -race --cover -p=1 --timeout 5m ./...
 
     - name: Publish Unit Test Results
       uses: EnricoMi/publish-unit-test-result-action@v1
