@@ -10,10 +10,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/areknoster/public-distributed-commit-log/internal/testpb"
 	. "github.com/areknoster/public-distributed-commit-log/signing"
 	"github.com/areknoster/public-distributed-commit-log/storage"
 	memorystorage "github.com/areknoster/public-distributed-commit-log/storage/memory"
+	"github.com/areknoster/public-distributed-commit-log/test/testpb"
 )
 
 func TestSignVerify(t *testing.T) {

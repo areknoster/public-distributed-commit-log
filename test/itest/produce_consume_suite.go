@@ -1,4 +1,4 @@
-package test
+package itest
 
 import (
 	"context"
@@ -12,7 +12,6 @@ import (
 
 	consumer "github.com/areknoster/public-distributed-commit-log/consumer"
 	"github.com/areknoster/public-distributed-commit-log/grpc"
-	"github.com/areknoster/public-distributed-commit-log/internal/testpb"
 	"github.com/areknoster/public-distributed-commit-log/producer"
 	"github.com/areknoster/public-distributed-commit-log/ratelimiting"
 	"github.com/areknoster/public-distributed-commit-log/sentinel/commiter"
@@ -21,6 +20,7 @@ import (
 	"github.com/areknoster/public-distributed-commit-log/sentinel/service"
 	"github.com/areknoster/public-distributed-commit-log/storage"
 	memorystorage "github.com/areknoster/public-distributed-commit-log/storage/memory"
+	"github.com/areknoster/public-distributed-commit-log/test/testpb"
 	"github.com/areknoster/public-distributed-commit-log/thead/memory"
 	"github.com/areknoster/public-distributed-commit-log/thead/sentinelhead"
 )
@@ -87,8 +87,6 @@ func (s *ProduceConsumeTestSuite) setupProducer() {
 }
 
 func (s *ProduceConsumeTestSuite) setupSentinelClient() {
-	if s.sentinelClient != nil {
-	}
 	conn, err := grpc.Dial(grpc.ConnConfig{
 		Host: "localhost",
 		Port: "8000",

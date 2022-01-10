@@ -15,11 +15,11 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/areknoster/public-distributed-commit-log/consumer"
-	"github.com/areknoster/public-distributed-commit-log/internal/testpb"
-	"github.com/areknoster/public-distributed-commit-log/internal/testutil"
 	"github.com/areknoster/public-distributed-commit-log/pdclpb"
 	"github.com/areknoster/public-distributed-commit-log/storage"
 	memorystorage "github.com/areknoster/public-distributed-commit-log/storage/memory"
+	"github.com/areknoster/public-distributed-commit-log/test/testpb"
+	"github.com/areknoster/public-distributed-commit-log/test/testutil"
 	"github.com/areknoster/public-distributed-commit-log/thead"
 	"github.com/areknoster/public-distributed-commit-log/thead/memory"
 )
