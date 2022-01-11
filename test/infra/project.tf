@@ -6,6 +6,7 @@ resource "google_project_service" "project-services" {
     "iam.googleapis.com",
     "run.googleapis.com",
     "compute.googleapis.com",
+    "cloudkms.googleapis.com",
   ])
 
   service = each.key
