@@ -1,6 +1,6 @@
-resource "google_cloud_run_service" "test_sentinel" {
+resource "google_cloud_run_service" "test-sentinel" {
   name                       = "test-sentinel"
-  location                   = var.region
+  location                   = local.region
   autogenerate_revision_name = true
   template {
     metadata {
@@ -11,10 +11,10 @@ resource "google_cloud_run_service" "test_sentinel" {
     }
     spec {
       containers {
-        image = "eu.gcr.io/${var.project}/${var.sentinel_image_name}"
+        image = "eu.gcr.io/${local.project}/${local.sentinel-image-name}"
         env {
           name  = "IPFS_DAEMON_HOST"
-          value = google_compute_address.internal_ipfs_server_address.address
+          value = google_compute_address.internal-ipfs-server-address.address
         }
         env {
           name  = "IPFS_DAEMON_PORT"
@@ -45,7 +45,7 @@ resource "google_cloud_run_service" "test_sentinel" {
     latest_revision = true
   }
 
-  depends_on = [google_project_service.gcp_services]
+  depends_on = [google_project_service.project-services]
 }
 
 data "google_iam_policy" "noauth" {
@@ -58,9 +58,9 @@ data "google_iam_policy" "noauth" {
 }
 
 resource "google_cloud_run_service_iam_policy" "test_sentinel_noauth" {
-  location    = google_cloud_run_service.test_sentinel.location
-  project     = google_cloud_run_service.test_sentinel.project
-  service     = google_cloud_run_service.test_sentinel.name
+  location    = google_cloud_run_service.test-sentinel.location
+  project     = google_cloud_run_service.test-sentinel.project
+  service     = google_cloud_run_service.test-sentinel.name
 
   policy_data = data.google_iam_policy.noauth.policy_data
 }
