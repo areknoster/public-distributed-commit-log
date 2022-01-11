@@ -19,3 +19,19 @@ resource "google_compute_firewall" "allow-ssh-to-ipfs-server" {
   target_tags = ["ipfs-server"]
   source_ranges = ["0.0.0.0/0"]
 }
+
+resource "google_compute_firewall" "allow-ipfs-communication" {
+  name = "allow-ipfs-communication"
+  network = google_compute_network.pdcl-test-network.name
+  allow {
+    protocol = "tcp"
+    ports = ["4001"]
+  }
+  allow {
+    protocol = "udp"
+    ports = ["4001"]
+  }
+  target_tags = ["ipfs-server"]
+  source_ranges = ["0.0.0.0/0"]
+
+}
