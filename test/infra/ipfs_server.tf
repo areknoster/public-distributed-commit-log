@@ -1,4 +1,7 @@
-module "gce-container" {
+locals {
+  ipfs-server-name = "ipfs-server-${substr(md5(module.ipfs-server.container.image), 0, 8)}"
+}
+module "ipfs-server" {
   source  = "terraform-google-modules/container-vm/google"
   version = "~> 2.0"
 
@@ -37,10 +40,6 @@ module "gce-container" {
   restart_policy = "Always"
 }
 
-locals {
-  ipfs-server-name = "ipfs-server-${substr(md5(module.gce-container.container.image), 0, 8)}"
-}
-
 resource "google_service_account" "ipfs-server" {
   account_id   = "ipfs-server"
   display_name = "IPFS Server"
@@ -67,10 +66,10 @@ resource "google_compute_address" "external-ipfs-server-address" {
 }
 
 resource "google_compute_instance" "ipfs-server-vm" {
-  project      = local.project
-  name         = local.ipfs-server-name
-  machine_type = "g1-small"
-  zone         = local.zone
+  project                   = local.project
+  name                      = local.ipfs-server-name
+  machine_type              = "g1-small"
+  zone                      = local.zone
   allow_stopping_for_update = true
 
   attached_disk {
@@ -81,7 +80,7 @@ resource "google_compute_instance" "ipfs-server-vm" {
 
   boot_disk {
     initialize_params {
-      image = module.gce-container.source_image
+      image = module.ipfs-server.source_image
     }
   }
 
@@ -94,12 +93,12 @@ resource "google_compute_instance" "ipfs-server-vm" {
   }
 
   metadata = {
-    gce-container-declaration = module.gce-container.metadata_value
+    ipfs-server-declaration   = module.ipfs-server.metadata_value
     google-logging-enabled    = "false"
     google-monitoring-enabled = "true"
   }
 
-  tags = ["ipfs-server"]
+  tags = ["ipfs-server", "sshable"]
   service_account {
     email = google_service_account.ipfs-server.email
     scopes = [
