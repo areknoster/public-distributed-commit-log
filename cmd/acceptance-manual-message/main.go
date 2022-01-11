@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"time"
 
+	"github.com/google/uuid"
 	shell "github.com/ipfs/go-ipfs-api"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog/log"
@@ -47,9 +47,9 @@ func main() {
 	prod := producer.NewMessageProducer(signedWriter, sentinelClient)
 
 	msg := &testpb.Message{
-		IdIncremental: 333,
-		Uuid:          "abc",
-		Created:       timestamppb.New(time.Time{}),
+		IdIncremental: 1,
+		Uuid:          uuid.NewString(),
+		Created:       timestamppb.Now(),
 	}
 	log.Info().Interface("msg", msg).Msg("writing message")
 	if err := prod.Produce(context.Background(), msg); err != nil {
