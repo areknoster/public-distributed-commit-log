@@ -40,5 +40,5 @@
       "section": "Test"
     }
   ],
-  "preMajor": true
+  "preMajor": false
 }
