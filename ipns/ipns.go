@@ -13,6 +13,7 @@ import (
 
 type Manager interface {
 	UpdateIPNSEntry(string) error
+	GetIPNSAddr() string
 }
 
 type NopManager struct{}
@@ -26,10 +27,16 @@ func (m *NopManager) UpdateIPNSEntry(commitCID string) error {
 	return nil
 }
 
+func (m *NopManager) GetIPNSAddr() string {
+	return ""
+}
+
 type IPNSManager struct {
 	privKey ipfscrypto.PrivKey
 	pubKey  ipfscrypto.PubKey
 	shell   *shell.Shell
+
+	ipnsAddr string
 }
 
 func NewIPNSManager(privKey ipfscrypto.PrivKey,
@@ -56,5 +63,10 @@ func (m *IPNSManager) UpdateIPNSEntry(commitCID string) error {
 		return fmt.Errorf("publishing ipns update to ipfs daemon: %v", err)
 	}
 	fmt.Printf("SUCCESS: %+v", resp)
+	m.ipnsAddr = resp.Name
 	return nil
+}
+
+func (m *IPNSManager) GetIPNSAddr() string {
+	return m.ipnsAddr
 }

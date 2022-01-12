@@ -20,8 +20,8 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SentinelClient interface {
 	Publish(ctx context.Context, in *PublishRequest, opts ...grpc.CallOption) (*PublishResponse, error)
-	// this might be removed when we start to serve topic head via IPNS
 	GetHeadCID(ctx context.Context, in *GetHeadCIDRequest, opts ...grpc.CallOption) (*GetHeadCIDResponse, error)
+	GetHeadIPNS(ctx context.Context, in *GetHeadIPNSRequest, opts ...grpc.CallOption) (*GetHeadIPNSResponse, error)
 }
 
 type sentinelClient struct {
@@ -50,13 +50,22 @@ func (c *sentinelClient) GetHeadCID(ctx context.Context, in *GetHeadCIDRequest, 
 	return out, nil
 }
 
+func (c *sentinelClient) GetHeadIPNS(ctx context.Context, in *GetHeadIPNSRequest, opts ...grpc.CallOption) (*GetHeadIPNSResponse, error) {
+	out := new(GetHeadIPNSResponse)
+	err := c.cc.Invoke(ctx, "/sentinel.Sentinel/GetHeadIPNS", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SentinelServer is the server API for Sentinel service.
 // All implementations must embed UnimplementedSentinelServer
 // for forward compatibility
 type SentinelServer interface {
 	Publish(context.Context, *PublishRequest) (*PublishResponse, error)
-	// this might be removed when we start to serve topic head via IPNS
 	GetHeadCID(context.Context, *GetHeadCIDRequest) (*GetHeadCIDResponse, error)
+	GetHeadIPNS(context.Context, *GetHeadIPNSRequest) (*GetHeadIPNSResponse, error)
 	mustEmbedUnimplementedSentinelServer()
 }
 
@@ -69,6 +78,10 @@ func (UnimplementedSentinelServer) Publish(context.Context, *PublishRequest) (*P
 
 func (UnimplementedSentinelServer) GetHeadCID(context.Context, *GetHeadCIDRequest) (*GetHeadCIDResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetHeadCID not implemented")
+}
+
+func (UnimplementedSentinelServer) GetHeadIPNS(context.Context, *GetHeadIPNSRequest) (*GetHeadIPNSResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetHeadIPNS not implemented")
 }
 func (UnimplementedSentinelServer) mustEmbedUnimplementedSentinelServer() {}
 
@@ -119,6 +132,24 @@ func _Sentinel_GetHeadCID_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Sentinel_GetHeadIPNS_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetHeadIPNSRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SentinelServer).GetHeadIPNS(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/sentinel.Sentinel/GetHeadIPNS",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SentinelServer).GetHeadIPNS(ctx, req.(*GetHeadIPNSRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Sentinel_ServiceDesc is the grpc.ServiceDesc for Sentinel service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -133,6 +164,10 @@ var Sentinel_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetHeadCID",
 			Handler:    _Sentinel_GetHeadCID_Handler,
+		},
+		{
+			MethodName: "GetHeadIPNS",
+			Handler:    _Sentinel_GetHeadIPNS_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
