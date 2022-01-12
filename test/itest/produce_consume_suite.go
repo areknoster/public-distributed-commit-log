@@ -12,6 +12,7 @@ import (
 
 	consumer "github.com/areknoster/public-distributed-commit-log/consumer"
 	"github.com/areknoster/public-distributed-commit-log/grpc"
+	"github.com/areknoster/public-distributed-commit-log/ipns"
 	"github.com/areknoster/public-distributed-commit-log/producer"
 	"github.com/areknoster/public-distributed-commit-log/ratelimiting"
 	"github.com/areknoster/public-distributed-commit-log/sentinel/commiter"
@@ -63,7 +64,7 @@ func (s *ProduceConsumeTestSuite) setupSentinel() {
 	}
 	memoryPinner := pinner.NewMemoryPinner()
 	headManager := memory.NewHeadManager(cid.Undef)
-	instantCommiter := commiter.NewInstant(headManager, s.messageStorage, memoryPinner)
+	instantCommiter := commiter.NewInstant(headManager, s.messageStorage, memoryPinner, ipns.NewNopManager())
 	sentinelService := service.New(validator, memoryPinner, instantCommiter, headManager)
 	grpcServer, err := grpc.NewServer(grpc.ServerConfig{
 		Host: "localhost",

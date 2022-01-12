@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
+	"github.com/areknoster/public-distributed-commit-log/ipns"
 	"github.com/areknoster/public-distributed-commit-log/pdclpb"
 	"github.com/areknoster/public-distributed-commit-log/sentinel"
 	"github.com/areknoster/public-distributed-commit-log/storage"
@@ -23,6 +24,7 @@ type MaxBufferCommitter struct {
 	headManager    thead.Manager
 	messageStorage storage.MessageStorage
 	pinner         sentinel.Pinner
+	ipnsManager    ipns.Manager
 
 	ticker *clock.Ticker
 
@@ -33,11 +35,12 @@ type MaxBufferCommitter struct {
 
 // NewMaxBufferCommitter returns a new instance of MaxBufferCommitter.
 func NewMaxBufferCommitter(headManager thead.Manager, messageStorage storage.MessageStorage, pinner sentinel.Pinner,
-	ticker *clock.Ticker, maxBufferSize int) *MaxBufferCommitter {
+	ipnsManager ipns.Manager, ticker *clock.Ticker, maxBufferSize int) *MaxBufferCommitter {
 	mbc := &MaxBufferCommitter{
 		headManager:    headManager,
 		messageStorage: messageStorage,
 		pinner:         pinner,
+		ipnsManager:    ipnsManager,
 		ticker:         ticker,
 		maxBufferSize:  maxBufferSize,
 	}
@@ -101,7 +104,7 @@ func (mbc *MaxBufferCommitter) commit() error {
 		return fmt.Errorf("set topic head to commit cid: %w", err)
 	}
 	log.Debug().Msgf("committed %d messages", len(cids))
-	return nil
+	return mbc.ipnsManager.UpdateIPNSEntry(commitCID.String())
 }
 
 func (mbc *MaxBufferCommitter) Add(ctx context.Context, cid cid.Cid) error {
