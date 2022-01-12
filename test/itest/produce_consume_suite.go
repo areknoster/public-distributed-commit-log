@@ -65,7 +65,7 @@ func (s *ProduceConsumeTestSuite) setupSentinel() {
 	memoryPinner := pinner.NewMemoryPinner()
 	headManager := memory.NewHeadManager(cid.Undef)
 	instantCommiter := commiter.NewInstant(headManager, s.messageStorage, memoryPinner, ipns.NewNopManager())
-	sentinelService := service.New(validator, memoryPinner, instantCommiter, headManager)
+	sentinelService := service.New(validator, memoryPinner, instantCommiter, headManager, ipns.NewNopManager())
 	grpcServer, err := grpc.NewServer(grpc.ServerConfig{
 		Host: "localhost",
 		Port: "8000",

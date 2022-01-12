@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/areknoster/public-distributed-commit-log/ipns"
 	"github.com/areknoster/public-distributed-commit-log/sentinel"
 	"github.com/areknoster/public-distributed-commit-log/sentinel/sentinelpb"
 	"github.com/areknoster/public-distributed-commit-log/thead"
@@ -17,19 +18,22 @@ import (
 // Service implements sentinel GRPC server
 type Service struct {
 	sentinelpb.UnimplementedSentinelServer
-	validator  sentinel.Validator
-	pinner     sentinel.Pinner
-	commiter   sentinel.Commiter
-	headReader thead.Reader
+	validator   sentinel.Validator
+	pinner      sentinel.Pinner
+	commiter    sentinel.Commiter
+	headReader  thead.Reader
+	ipnsManager ipns.Manager
 }
 
 // New initializes sentinel service
-func New(validator sentinel.Validator, pinner sentinel.Pinner, commiter sentinel.Commiter, headReader thead.Reader) *Service {
+func New(validator sentinel.Validator, pinner sentinel.Pinner, commiter sentinel.Commiter, headReader thead.Reader,
+	ipnsManager ipns.Manager) *Service {
 	return &Service{
-		validator:  validator,
-		pinner:     pinner,
-		commiter:   commiter,
-		headReader: headReader,
+		validator:   validator,
+		pinner:      pinner,
+		commiter:    commiter,
+		headReader:  headReader,
+		ipnsManager: ipnsManager,
 	}
 }
 
@@ -69,4 +73,9 @@ func (s *Service) GetHeadCID(ctx context.Context, req *sentinelpb.GetHeadCIDRequ
 		return nil, fmt.Errorf("get head CID: %w", err)
 	}
 	return &sentinelpb.GetHeadCIDResponse{Cid: headCID.String()}, nil
+}
+
+// GetHeadCID can be used by consumers to fetch head from sentinel
+func (s *Service) GetHeadIPNS(ctx context.Context, req *sentinelpb.GetHeadIPNSRequest) (*sentinelpb.GetHeadIPNSResponse, error) {
+	return &sentinelpb.GetHeadIPNSResponse{IpnsAddr: s.ipnsManager.GetIPNSAddr()}, nil
 }
