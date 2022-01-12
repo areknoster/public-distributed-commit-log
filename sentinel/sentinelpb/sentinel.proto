@@ -6,8 +6,8 @@ package sentinel;
 
 service Sentinel{
   rpc Publish(PublishRequest) returns (PublishResponse);
-  // this might be removed when we start to serve topic head via IPNS
   rpc GetHeadCID(GetHeadCIDRequest) returns (GetHeadCIDResponse);
+  rpc GetHeadIPNS(GetHeadIPNSRequest) returns (GetHeadIPNSResponse);
 }
 
 message PublishRequest{
@@ -20,6 +20,7 @@ message GetHeadCIDResponse{
   string cid = 1;
 }
 
-
-
-
+message GetHeadIPNSRequest{}
+message GetHeadIPNSResponse{
+  string ipnsAddr = 1;
+}
