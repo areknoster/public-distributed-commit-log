@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
+	"github.com/areknoster/public-distributed-commit-log/ipns"
 	"github.com/areknoster/public-distributed-commit-log/pdclpb"
 	"github.com/areknoster/public-distributed-commit-log/sentinel"
 	"github.com/areknoster/public-distributed-commit-log/storage"
@@ -21,6 +22,7 @@ type IntervalCommitter struct {
 	headManager    thead.Manager
 	messageStorage storage.MessageStorage
 	pinner         sentinel.Pinner
+	ipnsManager    ipns.Manager
 
 	ticker *clock.Ticker
 
@@ -29,11 +31,12 @@ type IntervalCommitter struct {
 }
 
 func NewIntervalCommitter(headManager thead.Manager, messageStorage storage.MessageStorage, pinner sentinel.Pinner,
-	ticker *clock.Ticker) *IntervalCommitter {
+	ipnsManager ipns.Manager, ticker *clock.Ticker) *IntervalCommitter {
 	ic := &IntervalCommitter{
 		headManager:    headManager,
 		messageStorage: messageStorage,
 		pinner:         pinner,
+		ipnsManager:    ipnsManager,
 		ticker:         ticker,
 	}
 	go ic.run()
@@ -89,7 +92,7 @@ func (i *IntervalCommitter) commit() error {
 	if err := i.headManager.SetHead(commitCtx, commitCID); err != nil {
 		return fmt.Errorf("set topic head to commit cid: %w", err)
 	}
-	return nil
+	return i.ipnsManager.UpdateIPNSEntry(commitCID.String())
 }
 
 func (i *IntervalCommitter) Add(ctx context.Context, cid cid.Cid) error {

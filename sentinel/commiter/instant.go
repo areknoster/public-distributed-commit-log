@@ -7,6 +7,7 @@ import (
 	"github.com/ipfs/go-cid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
+	"github.com/areknoster/public-distributed-commit-log/ipns"
 	"github.com/areknoster/public-distributed-commit-log/pdclpb"
 	"github.com/areknoster/public-distributed-commit-log/sentinel"
 	"github.com/areknoster/public-distributed-commit-log/storage"
@@ -18,10 +19,17 @@ type Instant struct {
 	headManager    thead.Manager
 	messageStorage storage.MessageStorage
 	pinner         sentinel.Pinner
+	ipnsManager    ipns.Manager
 }
 
-func NewInstant(headManager thead.Manager, messageStorage storage.MessageStorage, pinner sentinel.Pinner) *Instant {
-	return &Instant{headManager: headManager, messageStorage: messageStorage, pinner: pinner}
+func NewInstant(headManager thead.Manager, messageStorage storage.MessageStorage, pinner sentinel.Pinner,
+	ipnsManager ipns.Manager) *Instant {
+	return &Instant{
+		headManager:    headManager,
+		messageStorage: messageStorage,
+		pinner:         pinner,
+		ipnsManager:    ipnsManager,
+	}
 }
 
 func (i *Instant) Add(ctx context.Context, cid cid.Cid) error {
@@ -48,5 +56,5 @@ func (i *Instant) Add(ctx context.Context, cid cid.Cid) error {
 	if err := i.headManager.SetHead(ctx, commitCID); err != nil {
 		return fmt.Errorf("set topic head to commit cid: %w", err)
 	}
-	return nil
+	return i.ipnsManager.UpdateIPNSEntry(commitCID.String())
 }
