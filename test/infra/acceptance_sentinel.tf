@@ -8,7 +8,6 @@ module "acceptance-sentinel" {
 
   container = {
     image = "eu.gcr.io/${local.project}/${local.sentinel-image-name}"
-
     env = [
       {
         name  = "IPFS_DAEMON_HOST"
@@ -19,15 +18,19 @@ module "acceptance-sentinel" {
         value = "5001"
       },
       {
-        name = "PROJECT_ID"
+        name  = "ENVIRONMENT"
+        value = "GCP"
+      },
+      {
+        name  = "PROJECT_ID"
         value = local.project
       },
       {
-        name = "IPNS_KEY_SECRET_NAME"
+        name  = "IPNS_KEY_SECRET_NAME"
         value = google_secret_manager_secret.ipns-key.name
       },
       {
-        name = "IPNS_KEY_SECRET_VERSION"
+        name  = "IPNS_KEY_SECRET_VERSION"
         value = data.google_secret_manager_secret_version.ipns-key-version.name
       },
     ]
@@ -115,9 +118,9 @@ resource "google_secret_manager_secret_iam_member" "secret-access" {
   provisioner "local-exec" {
     command = "echo '\n\n-= ADD IPNS PRIVATE KEY TO ${google_secret_manager_secret.ipns-key.name} AND RUN  `touch /tmp/ipns-key-added`; =-\n\n'; while ! test -f /tmp/ipns-key-added; do sleep 10; done"
   }
-  secret_id = google_secret_manager_secret.ipns-key.id
-  role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${google_service_account.acceptance-sentinel.email}"
+  secret_id  = google_secret_manager_secret.ipns-key.id
+  role       = "roles/secretmanager.secretAccessor"
+  member     = "serviceAccount:${google_service_account.acceptance-sentinel.email}"
   depends_on = [google_secret_manager_secret.ipns-key]
 }
 
