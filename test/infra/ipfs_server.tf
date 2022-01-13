@@ -68,7 +68,7 @@ resource "google_compute_address" "external-ipfs-server-address" {
 resource "google_compute_instance" "ipfs-server-vm" {
   project                   = local.project
   name                      = local.ipfs-server-name
-  machine_type              = "g1-small"
+  machine_type              = "f1-micro"
   zone                      = local.zone
   allow_stopping_for_update = true
 
