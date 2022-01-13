@@ -20,7 +20,9 @@ import (
 	"github.com/areknoster/public-distributed-commit-log/sentinel/sentinelpb"
 	"github.com/areknoster/public-distributed-commit-log/sentinel/service"
 	"github.com/areknoster/public-distributed-commit-log/storage"
-	memorystorage "github.com/areknoster/public-distributed-commit-log/storage/memory"
+	memorystorage "github.com/areknoster/public-distributed-commit-log/storage/content/memory"
+	messagestorage "github.com/areknoster/public-distributed-commit-log/storage/message"
+	"github.com/areknoster/public-distributed-commit-log/storage/pbcodec"
 	"github.com/areknoster/public-distributed-commit-log/test/testpb"
 	"github.com/areknoster/public-distributed-commit-log/thead/memory"
 	"github.com/areknoster/public-distributed-commit-log/thead/sentinelhead"
@@ -82,7 +84,7 @@ func (s *ProduceConsumeTestSuite) setupMessageStorage() {
 		return
 	}
 	contentStorage := &memorystorage.Storage{}
-	s.messageStorage = storage.NewProtoMessageStorage(contentStorage)
+	s.messageStorage = messagestorage.NewContentStorageWrapper(contentStorage, pbcodec.ProtoBuf{})
 }
 
 func (s *ProduceConsumeTestSuite) setupProducer() {
@@ -135,9 +137,9 @@ func (s *ProduceConsumeTestSuite) consumeFromStart(ctx context.Context, messages
 	consumeCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	go func() {
-		err := cons.Consume(consumeCtx, consumer.MessageHandlerFunc(func(ctx context.Context, message storage.ProtoUnmarshallable) error {
+		err := cons.Consume(consumeCtx, consumer.MessageHandlerFunc(func(ctx context.Context, message storage.ProtoDecodable) error {
 			testMessage := &testpb.Message{}
-			if err := message.Unmarshall(testMessage); err != nil {
+			if err := message.Decode(testMessage); err != nil {
 				close(idsChan)
 				return err
 			}
@@ -167,7 +169,7 @@ func (m *messageValidator) Validate(ctx context.Context, cid cid.Cid) error {
 	unmarshallable, err := m.messageStorage.Read(ctx, cid)
 	require.NoError(m.t, err)
 	message := &testpb.Message{}
-	err = unmarshallable.Unmarshall(message)
+	err = unmarshallable.Decode(message)
 	require.NoError(m.t, err)
 	return nil
 }

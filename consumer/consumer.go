@@ -9,14 +9,14 @@ import (
 // MessageHandler is called to handle message found by Consumer.
 // Handle on multiple messages can be called concurrently.
 type MessageHandler interface {
-	Handle(ctx context.Context, message storage.ProtoUnmarshallable) error
+	Handle(ctx context.Context, message storage.ProtoDecodable) error
 }
 
 // MessageHandlerFunc is a function implementing MessageHandler interface
-type MessageHandlerFunc func(ctx context.Context, message storage.ProtoUnmarshallable) error
+type MessageHandlerFunc func(ctx context.Context, message storage.ProtoDecodable) error
 
 // Handle calls MessageHandlerFunc
-func (m MessageHandlerFunc) Handle(ctx context.Context, message storage.ProtoUnmarshallable) error {
+func (m MessageHandlerFunc) Handle(ctx context.Context, message storage.ProtoDecodable) error {
 	return m(ctx, message)
 }
 

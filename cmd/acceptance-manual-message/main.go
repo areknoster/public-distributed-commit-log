@@ -9,11 +9,12 @@ import (
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
+	"github.com/areknoster/public-distributed-commit-log/crypto"
 	"github.com/areknoster/public-distributed-commit-log/grpc"
 	"github.com/areknoster/public-distributed-commit-log/producer"
 	"github.com/areknoster/public-distributed-commit-log/sentinel/sentinelpb"
-	"github.com/areknoster/public-distributed-commit-log/signing"
-	daemonstorage "github.com/areknoster/public-distributed-commit-log/storage/ipfs/daemon"
+	ipfsstorage "github.com/areknoster/public-distributed-commit-log/storage/message/ipfs"
+	"github.com/areknoster/public-distributed-commit-log/storage/pbcodec"
 	"github.com/areknoster/public-distributed-commit-log/test/testpb"
 )
 
@@ -29,14 +30,16 @@ func main() {
 		log.Fatal().Err(err).Msg("load PDCL config")
 	}
 
-	writer := daemonstorage.NewStorage(shell.NewShell("localhost:5001"))
+	codec := pbcodec.Json{}
 
-	signer, err := signing.ReadEd25519(cfg.PrivKeyPath)
+	writer := ipfsstorage.NewStorage(shell.NewShell("localhost:5001"), codec)
+
+	signer, err := pdclcrypto.ReadEd25519(cfg.PrivKeyPath)
 	if err != nil {
 		log.Fatal().Err(err).Msg("get signer")
 	}
 
-	signedWriter := signing.NewSignedMessageWriter(writer, cfg.SignerID, signer)
+	signedWriter := pdclcrypto.NewSignedMessageWriter(writer, codec, cfg.SignerID, signer)
 
 	sentinelConn, err := grpc.Dial(cfg.SentinelConn)
 	if err != nil {
