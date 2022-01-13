@@ -21,7 +21,8 @@ import (
 	"github.com/areknoster/public-distributed-commit-log/sentinel/pinner"
 	"github.com/areknoster/public-distributed-commit-log/sentinel/sentinelpb"
 	"github.com/areknoster/public-distributed-commit-log/sentinel/service"
-	daemonstorage "github.com/areknoster/public-distributed-commit-log/storage/ipfs/daemon"
+	daemonstorage "github.com/areknoster/public-distributed-commit-log/storage/message/ipfs"
+	"github.com/areknoster/public-distributed-commit-log/storage/pbcodec"
 	memoryhead "github.com/areknoster/public-distributed-commit-log/thead/memory"
 )
 
@@ -54,9 +55,11 @@ func main() {
 		log.Fatal().Err(err).Msg("can't process environment variables for config")
 	}
 
+	codec := pbcodec.Json{}
+
 	shell := daemonstorage.NewShell(config.DaemonStorage)
-	storage := daemonstorage.NewStorage(shell)
-	messageValidator, err := validator.New(storage, config.Validator)
+	storage := daemonstorage.NewStorage(shell, codec)
+	messageValidator, err := validator.New(storage, codec, config.Validator)
 	if err != nil {
 		log.Fatal().Err(err).Msg("initialize message validator")
 	}

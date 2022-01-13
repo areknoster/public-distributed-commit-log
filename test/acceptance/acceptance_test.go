@@ -9,12 +9,13 @@ import (
 	"github.com/areknoster/public-distributed-commit-log/grpc"
 	"github.com/areknoster/public-distributed-commit-log/sentinel/sentinelpb"
 	"github.com/areknoster/public-distributed-commit-log/storage"
-	daemonstorage "github.com/areknoster/public-distributed-commit-log/storage/ipfs/daemon"
+	ipfsstorage "github.com/areknoster/public-distributed-commit-log/storage/message/ipfs"
+	"github.com/areknoster/public-distributed-commit-log/storage/pbcodec"
 )
 
 type Config struct {
 	sentinelConn grpc.ConnConfig
-	daemon       daemonstorage.Config
+	daemon       ipfsstorage.Config
 }
 
 // TestAcceptance checks for acceptance requirements.
@@ -41,7 +42,7 @@ func initSentinelClient(t *testing.T, config Config) sentinelpb.SentinelClient {
 }
 
 func initStorage(t *testing.T, config Config) storage.MessageStorage {
-	return daemonstorage.NewStorage(daemonstorage.NewShell(config.daemon))
+	return ipfsstorage.NewStorage(ipfsstorage.NewShell(config.daemon), pbcodec.Json{})
 }
 
 func initConfig(t *testing.T) Config {

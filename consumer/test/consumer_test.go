@@ -19,7 +19,9 @@ import (
 	"github.com/areknoster/public-distributed-commit-log/ipns"
 	"github.com/areknoster/public-distributed-commit-log/pdclpb"
 	"github.com/areknoster/public-distributed-commit-log/storage"
-	memorystorage "github.com/areknoster/public-distributed-commit-log/storage/memory"
+	memorystorage "github.com/areknoster/public-distributed-commit-log/storage/content/memory"
+	messagestorage "github.com/areknoster/public-distributed-commit-log/storage/message"
+	"github.com/areknoster/public-distributed-commit-log/storage/pbcodec"
 	"github.com/areknoster/public-distributed-commit-log/test/testpb"
 	"github.com/areknoster/public-distributed-commit-log/test/testutil"
 	"github.com/areknoster/public-distributed-commit-log/thead"
@@ -39,7 +41,7 @@ func TestEdgeCases(t *testing.T) {
 			c := creator(cid.Undef, mockReader, memory.NewHeadManager(cid.Undef))
 			ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 			defer cancel()
-			err := c.Consume(ctx, consumer.MessageHandlerFunc(func(ctx context.Context, message storage.ProtoUnmarshallable) error {
+			err := c.Consume(ctx, consumer.MessageHandlerFunc(func(ctx context.Context, message storage.ProtoDecodable) error {
 				t.Fatal("no message should be handled")
 				return nil
 			}))
@@ -53,7 +55,7 @@ func TestEdgeCases(t *testing.T) {
 			require.NoError(t, ipnsMgr.UpdateIPNSEntry(head.String()))
 			ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 			defer cancel()
-			err := c.Consume(ctx, consumer.MessageHandlerFunc(func(ctx context.Context, message storage.ProtoUnmarshallable) error {
+			err := c.Consume(ctx, consumer.MessageHandlerFunc(func(ctx context.Context, message storage.ProtoDecodable) error {
 				t.Fatal("no message should be handled")
 				return nil
 			}))
@@ -171,15 +173,14 @@ func TestRandomSizedCommits(t *testing.T) {
 }
 
 func newMockMessageReader(t *testing.T) *mockMessageReader {
-	memStorage := &memorystorage.Storage{}
-	messageStorage := storage.NewProtoMessageStorage(memStorage)
+	messageStorage := messagestorage.NewContentStorageWrapper(memorystorage.NewStorage(), pbcodec.ProtoBuf{})
 	return &mockMessageReader{
 		messageStorage: messageStorage,
 		t:              t,
 	}
 }
 
-type accessor func(ctx context.Context) (storage.ProtoUnmarshallable, error)
+type accessor func(ctx context.Context) (storage.ProtoDecodable, error)
 
 // mockMessageReader registers accessors for messages that can simulate multiple storage events, e.g. timeout, errors, correct access
 type mockMessageReader struct {
@@ -189,14 +190,14 @@ type mockMessageReader struct {
 	t                  *testing.T
 }
 
-func (m *mockMessageReader) Read(ctx context.Context, cid cid.Cid) (storage.ProtoUnmarshallable, error) {
+func (m *mockMessageReader) Read(ctx context.Context, cid cid.Cid) (storage.ProtoDecodable, error) {
 	v, found := m.accessors.Load(cid)
 	require.True(m.t, found, fmt.Sprintf("attempt to acess message %s which was not registered", cid))
 	accessor := v.(accessor)
 	return accessor(ctx)
 }
 
-func (m *mockMessageReader) register(c cid.Cid, f func(ctx context.Context) (storage.ProtoUnmarshallable, error)) {
+func (m *mockMessageReader) register(c cid.Cid, f func(ctx context.Context) (storage.ProtoDecodable, error)) {
 	m.accessors.Store(c, accessor(f))
 }
 
@@ -205,7 +206,7 @@ func (m *mockMessageReader) RegisterMessageWithError(message proto.Message, err 
 	messageCid, writeErr := m.messageStorage.Write(context.TODO(), message)
 	require.NoError(m.t, writeErr)
 	m.uncommitedMessages = append(m.uncommitedMessages, messageCid)
-	m.register(messageCid, func(ctx context.Context) (storage.ProtoUnmarshallable, error) {
+	m.register(messageCid, func(ctx context.Context) (storage.ProtoDecodable, error) {
 		return nil, err
 	})
 }
@@ -215,7 +216,7 @@ func (m *mockMessageReader) RegisterMessage(message *testpb.Message) {
 	messageCid, writeErr := m.messageStorage.Write(context.TODO(), message)
 	require.NoError(m.t, writeErr)
 	m.uncommitedMessages = append(m.uncommitedMessages, messageCid)
-	m.register(messageCid, func(ctx context.Context) (storage.ProtoUnmarshallable, error) {
+	m.register(messageCid, func(ctx context.Context) (storage.ProtoDecodable, error) {
 		message, err := m.messageStorage.Read(context.TODO(), messageCid)
 		require.NoError(m.t, err)
 		return message, nil
@@ -239,7 +240,7 @@ func (m *mockMessageReader) writeCommit(previous cid.Cid) cid.Cid {
 
 func (m *mockMessageReader) Commit(previous cid.Cid) cid.Cid {
 	messageCid := m.writeCommit(previous)
-	m.register(messageCid, func(ctx context.Context) (storage.ProtoUnmarshallable, error) {
+	m.register(messageCid, func(ctx context.Context) (storage.ProtoDecodable, error) {
 		message, err := m.messageStorage.Read(context.TODO(), messageCid)
 		require.NoError(m.t, err)
 		return message, nil
@@ -249,7 +250,7 @@ func (m *mockMessageReader) Commit(previous cid.Cid) cid.Cid {
 
 func (m *mockMessageReader) CommitWithError(previous cid.Cid) cid.Cid {
 	messageCid := m.writeCommit(previous)
-	m.register(messageCid, func(ctx context.Context) (storage.ProtoUnmarshallable, error) {
+	m.register(messageCid, func(ctx context.Context) (storage.ProtoDecodable, error) {
 		message, err := m.messageStorage.Read(context.TODO(), messageCid)
 		require.NoError(m.t, err)
 		return message, nil
@@ -279,9 +280,9 @@ func newTestHandler(t *testing.T) *testHandler {
 	}
 }
 
-func (th *testHandler) Handle(ctx context.Context, message storage.ProtoUnmarshallable) error {
+func (th *testHandler) Handle(ctx context.Context, message storage.ProtoDecodable) error {
 	testMessage := &testpb.Message{}
-	require.NoError(th.t, message.Unmarshall(testMessage))
+	require.NoError(th.t, message.Decode(testMessage))
 
 	currentValue, found := th.messages.Load(testMessage.IdIncremental)
 	require.True(th.t, found, "handle on unknown message")

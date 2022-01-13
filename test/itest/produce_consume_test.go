@@ -8,7 +8,8 @@ import (
 	shell "github.com/ipfs/go-ipfs-api"
 	"github.com/stretchr/testify/suite"
 
-	daemonstorage "github.com/areknoster/public-distributed-commit-log/storage/ipfs/daemon"
+	daemonstorage "github.com/areknoster/public-distributed-commit-log/storage/message/ipfs"
+	"github.com/areknoster/public-distributed-commit-log/storage/pbcodec"
 	"github.com/areknoster/public-distributed-commit-log/test/testpb"
 )
 
@@ -43,7 +44,7 @@ func (s *LocalDaemonProduceConsumeTestSuite) waitForDaemon() {
 
 func (s *LocalDaemonProduceConsumeTestSuite) setupMessageStorage() {
 	sh := shell.NewShell("localhost:5001")
-	s.messageStorage = daemonstorage.NewStorage(sh)
+	s.messageStorage = daemonstorage.NewStorage(sh, pbcodec.Json{})
 }
 
 func TestLocalDaemonProduceConsumeTestSuite(t *testing.T) {

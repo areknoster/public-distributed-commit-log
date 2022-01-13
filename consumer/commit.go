@@ -65,7 +65,7 @@ func (cr *storageCommitReader) GetCommit(ctx context.Context, cid cid.Cid) (comm
 		return commit{}, fmt.Errorf("read commit message from storage: %w", err)
 	}
 	pbCommit := &pdclpb.Commit{}
-	if err := unmarshallable.Unmarshall(pbCommit); err != nil {
+	if err := unmarshallable.Decode(pbCommit); err != nil {
 		return commit{}, fmt.Errorf("unmarshall to commit proto: %w", err)
 	}
 

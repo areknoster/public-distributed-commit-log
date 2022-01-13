@@ -1,4 +1,4 @@
-package daemonstorage
+package ipfs
 
 import (
 	"bytes"
@@ -25,22 +25,20 @@ func NewShell(config Config) *shell.Shell {
 	return shell.NewShell(net.JoinHostPort(config.IPFSDaemonHost, config.IPFSDaemonPort))
 }
 
-// Storage is IPFS-based storage.Storage interface implementation
-type Storage struct {
-	shell       *shell.Shell
-	marshalOpts proto.MarshalOptions
+// DaemonStorage is IPFS-based storage.ContentStorage interface implementation
+type DaemonStorage struct {
+	shell *shell.Shell
+	codec storage.Codec
 }
 
-func NewStorage(sh *shell.Shell) *Storage {
-	return &Storage{
+func NewStorage(sh *shell.Shell, codec storage.Codec) *DaemonStorage {
+	return &DaemonStorage{
 		shell: sh,
-		marshalOpts: proto.MarshalOptions{
-			Deterministic: true,
-		},
+		codec: codec,
 	}
 }
 
-func (s *Storage) Read(ctx context.Context, cid cid.Cid) (storage.ProtoUnmarshallable, error) {
+func (s *DaemonStorage) Read(ctx context.Context, cid cid.Cid) (storage.ProtoDecodable, error) {
 	rc, err := s.shell.Cat(cid.String())
 	if err != nil {
 		return nil, fmt.Errorf("cat %s from IPFS: %w", cid.String(), err)
@@ -53,11 +51,11 @@ func (s *Storage) Read(ctx context.Context, cid cid.Cid) (storage.ProtoUnmarshal
 		}
 		return nil, fmt.Errorf("read message content: %w", err)
 	}
-	return storage.ProtoDecode(content), nil
+	return s.codec.Decode(content), nil
 }
 
-func (s *Storage) Write(ctx context.Context, message proto.Message) (cid.Cid, error) {
-	encoded, err := s.marshalOpts.Marshal(message)
+func (s *DaemonStorage) Write(ctx context.Context, message proto.Message) (cid.Cid, error) {
+	encoded, err := s.codec.Encode(message)
 	if err != nil {
 		return cid.Cid{}, fmt.Errorf("marshall message: %w", err)
 	}

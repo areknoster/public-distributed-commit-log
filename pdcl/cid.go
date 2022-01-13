@@ -13,6 +13,7 @@ func ParseCID(cidStr string) (cid.Cid, error) {
 	if cidStr == "" || cidStr == cid.Undef.String() {
 		return cid.Undef, nil
 	}
+	fmt.Println()
 	return cid.Decode(cidStr)
 }
 

@@ -13,8 +13,8 @@ import (
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
+	pdclcrypto "github.com/areknoster/public-distributed-commit-log/crypto"
 	"github.com/areknoster/public-distributed-commit-log/sentinel"
-	"github.com/areknoster/public-distributed-commit-log/signing"
 	"github.com/areknoster/public-distributed-commit-log/storage"
 	"github.com/areknoster/public-distributed-commit-log/test/testpb"
 )
@@ -31,13 +31,13 @@ type SignedValidator struct {
 	config Config
 }
 
-func New(messageReader storage.MessageReader, config Config) (*SignedValidator, error) {
+func New(messageReader storage.MessageReader, decoder storage.Decoder, config Config) (*SignedValidator, error) {
 	registry, err := loadRegistry()
 	if err != nil {
 		return nil, fmt.Errorf("load producer registry: %w", err)
 	}
 
-	signedMessageReader := signing.NewSignedMessageVerifyReader(messageReader, registry)
+	signedMessageReader := pdclcrypto.NewSignedMessageVerifyReader(messageReader, decoder, registry)
 
 	return &SignedValidator{
 		reader: signedMessageReader,
@@ -45,8 +45,8 @@ func New(messageReader storage.MessageReader, config Config) (*SignedValidator, 
 	}, nil
 }
 
-func loadRegistry() (signing.MemorySignerRegistry, error) {
-	registry := signing.MemorySignerRegistry{}
+func loadRegistry() (pdclcrypto.MemorySignerRegistry, error) {
+	registry := pdclcrypto.MemorySignerRegistry{}
 	for _, p := range producers {
 		block, _ := pem.Decode([]byte(p.publicKey))
 		if block == nil {
@@ -68,7 +68,7 @@ func (s *SignedValidator) Validate(ctx context.Context, cid cid.Cid) error {
 	}
 
 	msg := new(testpb.Message)
-	if err := unmarshallable.Unmarshall(msg); err != nil {
+	if err := unmarshallable.Decode(msg); err != nil {
 		return sentinel.ErrorValidation{
 			Kind: sentinel.ErrorValidationKindIncorrectContent,
 			Err:  fmt.Errorf("can't deserialize with test message proto schema: %w", err),
@@ -88,10 +88,10 @@ func (s *SignedValidator) Validate(ctx context.Context, cid cid.Cid) error {
 	return nil
 }
 
-func (s *SignedValidator) readMessage(ctx context.Context, cid cid.Cid) (storage.ProtoUnmarshallable, error) {
+func (s *SignedValidator) readMessage(ctx context.Context, cid cid.Cid) (storage.ProtoDecodable, error) {
 	var (
 		err            error
-		unmarshallable storage.ProtoUnmarshallable
+		unmarshallable storage.ProtoDecodable
 		logger         = log.With().Stringer("cid", cid).Logger()
 	)
 	for i := uint(0); i <= s.config.Retries; i++ {
