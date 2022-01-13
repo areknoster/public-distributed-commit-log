@@ -18,6 +18,18 @@ module "acceptance-sentinel" {
         name  = "IPFS_DAEMON_PORT"
         value = "5001"
       },
+      {
+        name = "PROJECT_ID"
+        value = local.project
+      },
+      {
+        name = "IPNS_KEY_SECRET_NAME"
+        value = google_secret_manager_secret.ipns-key.name
+      },
+      {
+        name = "IPNS_KEY_SECRET_VERSION"
+        value = data.google_secret_manager_secret_version.ipns-key-version.name
+      },
     ]
   }
   restart_policy = "Always"
@@ -80,3 +92,32 @@ resource "google_compute_instance" "acceptance-sentinel-vm" {
     ]
   }
 }
+
+resource "google_secret_manager_secret" "ipns-key" {
+  secret_id = "ipns-key"
+
+  labels = {
+    label = "acceptance-sentinel"
+  }
+
+  replication {
+    automatic = true
+  }
+  depends_on = [google_project_service.project-services]
+}
+
+data "google_secret_manager_secret_version" "ipns-key-version" {
+  secret = google_secret_manager_secret.ipns-key.name
+}
+
+
+resource "google_secret_manager_secret_iam_member" "secret-access" {
+  provisioner "local-exec" {
+    command = "echo '\n\n-= ADD IPNS PRIVATE KEY TO ${google_secret_manager_secret.ipns-key.name} AND RUN  `touch /tmp/ipns-key-added`; =-\n\n'; while ! test -f /tmp/ipns-key-added; do sleep 10; done"
+  }
+  secret_id = google_secret_manager_secret.ipns-key.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.acceptance-sentinel.email}"
+  depends_on = [google_secret_manager_secret.ipns-key]
+}
+
