@@ -68,7 +68,7 @@ resource "google_compute_address" "external-ipfs-server-address" {
 resource "google_compute_instance" "ipfs-server-vm" {
   project                   = local.project
   name                      = local.ipfs-server-name
-  machine_type              = "f1-micro"
+  machine_type              = "g1-small"
   zone                      = local.zone
   allow_stopping_for_update = true
 
@@ -93,7 +93,7 @@ resource "google_compute_instance" "ipfs-server-vm" {
   }
 
   metadata = {
-    ipfs-server-declaration   = module.ipfs-server.metadata_value
+    gce-container-declaration   = module.ipfs-server.metadata_value
     google-logging-enabled    = "false"
     google-monitoring-enabled = "true"
   }
