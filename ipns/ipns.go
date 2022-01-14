@@ -2,33 +2,46 @@ package ipns
 
 import (
 	"fmt"
+	"io"
 	"path"
+	"sync"
 	"time"
 
 	shell "github.com/ipfs/go-ipfs-api"
 	"github.com/ipfs/go-ipns"
 	ipfscrypto "github.com/libp2p/go-libp2p-core/crypto"
-	"github.com/rs/zerolog/log"
 )
 
 type Manager interface {
 	UpdateIPNSEntry(string) error
 	GetIPNSAddr() string
+	ResolveIPNS(string) (string, error)
 }
 
-type NopManager struct{}
-
-func NewNopManager() *NopManager {
-	return &NopManager{}
+type TestManager struct {
+	resolved string
+	mu       sync.RWMutex
 }
 
-func (m *NopManager) UpdateIPNSEntry(commitCID string) error {
-	log.Debug().Msg("updating ipns entry in nop manager")
+func NewTestManager() *TestManager {
+	return &TestManager{}
+}
+
+func (m *TestManager) UpdateIPNSEntry(commitCID string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.resolved = commitCID
 	return nil
 }
 
-func (m *NopManager) GetIPNSAddr() string {
+func (m *TestManager) GetIPNSAddr() string {
 	return ""
+}
+
+func (m *TestManager) ResolveIPNS(_ string) (string, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return fmt.Sprintf("/ipfs/%s", m.resolved), nil
 }
 
 type IPNSManager struct {
@@ -69,4 +82,20 @@ func (m *IPNSManager) UpdateIPNSEntry(commitCID string) error {
 
 func (m *IPNSManager) GetIPNSAddr() string {
 	return m.ipnsAddr
+}
+
+func (m *IPNSManager) CatIPNS(filename string) ([]byte, error) {
+	bytes, err := m.shell.Cat(path.Join("/ipns/", filename))
+	if err != nil {
+		return nil, fmt.Errorf("cat %s from IPNS: %w", filename, err)
+	}
+	return io.ReadAll(bytes)
+}
+
+func (m *IPNSManager) ResolveIPNS(filename string) (string, error) {
+	cid, err := m.shell.Resolve(path.Join("/ipns/", filename))
+	if err != nil {
+		return "", fmt.Errorf("resolve %s from IPNS: %w", filename, err)
+	}
+	return cid, nil
 }

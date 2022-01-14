@@ -35,9 +35,11 @@ type ProduceConsumeTestSuite struct {
 	sentinelClient sentinelpb.SentinelClient
 	producer       *producer.MessageProducer
 	globalCtx      context.Context
+	ipnsMgr        ipns.Manager
 }
 
 func (s *ProduceConsumeTestSuite) SetupSuite() {
+	s.ipnsMgr = ipns.NewTestManager()
 	s.setupMessageStorage()
 	s.setupSentinel()
 	s.setupSentinelClient()
@@ -64,8 +66,8 @@ func (s *ProduceConsumeTestSuite) setupSentinel() {
 	}
 	memoryPinner := pinner.NewMemoryPinner()
 	headManager := memory.NewHeadManager(cid.Undef)
-	instantCommiter := commiter.NewInstant(headManager, s.messageStorage, memoryPinner, ipns.NewNopManager())
-	sentinelService := service.New(validator, memoryPinner, instantCommiter, headManager, ipns.NewNopManager())
+	instantCommiter := commiter.NewInstant(headManager, s.messageStorage, memoryPinner, s.ipnsMgr)
+	sentinelService := service.New(validator, memoryPinner, instantCommiter, headManager, s.ipnsMgr)
 	grpcServer, err := grpc.NewServer(grpc.ServerConfig{
 		Host: "localhost",
 		Port: "8000",
@@ -104,7 +106,7 @@ func (s *ProduceConsumeTestSuite) newConsumer(offset cid.Cid) consumer.Consumer 
 		consumer.FirstToLastConsumerConfig{
 			PollInterval: time.Second,
 			PollTimeout:  200 * time.Millisecond,
-		})
+		}, s.ipnsMgr, "")
 }
 
 func (s *ProduceConsumeTestSuite) TestProduceConsume() {
@@ -129,7 +131,6 @@ func (s *ProduceConsumeTestSuite) consumeFromStart(ctx context.Context, messages
 		s.Require().NoError(s.producer.Produce(ctx, message))
 	}
 	idsChan := make(chan int64, 5)
-
 	cons := s.newConsumer(cid.Undef)
 	consumeCtx, cancel := context.WithCancel(ctx)
 	defer cancel()

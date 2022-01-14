@@ -2,6 +2,7 @@ package test
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"math/rand"
 	"sync"
@@ -15,6 +16,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/areknoster/public-distributed-commit-log/consumer"
+	"github.com/areknoster/public-distributed-commit-log/ipns"
 	"github.com/areknoster/public-distributed-commit-log/pdclpb"
 	"github.com/areknoster/public-distributed-commit-log/storage"
 	memorystorage "github.com/areknoster/public-distributed-commit-log/storage/memory"
@@ -27,6 +29,8 @@ import (
 var consumerCreators = []createConsumer{
 	createFirstToLastConsumer,
 }
+
+var ipnsMgr = ipns.NewTestManager()
 
 func TestEdgeCases(t *testing.T) {
 	for _, creator := range consumerCreators {
@@ -46,6 +50,7 @@ func TestEdgeCases(t *testing.T) {
 			mockReader := newMockMessageReader(t)
 			head := mockReader.Commit(cid.Undef)
 			c := creator(cid.Undef, mockReader, memory.NewHeadManager(head))
+			require.NoError(t, ipnsMgr.UpdateIPNSEntry(head.String()))
 			ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 			defer cancel()
 			err := c.Consume(ctx, consumer.MessageHandlerFunc(func(ctx context.Context, message storage.ProtoUnmarshallable) error {
@@ -61,6 +66,7 @@ func TestEdgeCases(t *testing.T) {
 			mockReader.RegisterMessage(th.AddNext())
 			head := mockReader.Commit(cid.Undef)
 			headManager := memory.NewHeadManager(head)
+			require.NoError(t, ipnsMgr.UpdateIPNSEntry(head.String()))
 			c := creator(testutil.RandomCID(t), mockReader, headManager)
 			ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 			defer cancel()
@@ -72,6 +78,7 @@ func TestEdgeCases(t *testing.T) {
 			mockReader.RegisterMessage(th.AddNext())
 			head = mockReader.Commit(head)
 			require.NoError(t, headManager.SetHead(ctx, head))
+			require.NoError(t, ipnsMgr.UpdateIPNSEntry(head.String()))
 			<-ctx.Done()
 			th.AssertAllHandledOnce()
 		})
@@ -96,6 +103,7 @@ func TestLinearIncremental(t *testing.T) {
 				mockReader.RegisterMessage(th.AddNext())
 				head = mockReader.Commit(head)
 				require.NoError(t, headManager.SetHead(ctx, head))
+				require.NoError(t, ipnsMgr.UpdateIPNSEntry(head.String()))
 				time.Sleep(time.Millisecond)
 			}
 
@@ -121,6 +129,7 @@ func TestLinearIncremental(t *testing.T) {
 			mockReader.RegisterMessage(th.AddNext())
 			head = mockReader.Commit(head)
 			require.NoError(t, headManager.SetHead(ctx, head))
+			require.NoError(t, ipnsMgr.UpdateIPNSEntry(head.String()))
 
 			time.Sleep(100 * time.Millisecond)
 			cancel()
@@ -150,6 +159,7 @@ func TestRandomSizedCommits(t *testing.T) {
 				}
 				head = mockReader.Commit(head)
 				require.NoError(t, headManager.SetHead(ctx, head))
+				require.NoError(t, ipnsMgr.UpdateIPNSEntry(head.String()))
 				time.Sleep(5 * time.Millisecond)
 			}
 
@@ -181,7 +191,7 @@ type mockMessageReader struct {
 
 func (m *mockMessageReader) Read(ctx context.Context, cid cid.Cid) (storage.ProtoUnmarshallable, error) {
 	v, found := m.accessors.Load(cid)
-	require.True(m.t, found, "attempt to acess message which was not registered")
+	require.True(m.t, found, fmt.Sprintf("attempt to acess message %s which was not registered", cid))
 	accessor := v.(accessor)
 	return accessor(ctx)
 }
@@ -250,10 +260,11 @@ func (m *mockMessageReader) CommitWithError(previous cid.Cid) cid.Cid {
 type createConsumer func(initialOffset cid.Cid, messagesTree storage.MessageReader, headReader thead.Reader) consumer.Consumer
 
 var createFirstToLastConsumer createConsumer = func(initialOffset cid.Cid, messagesTree storage.MessageReader, headReader thead.Reader) consumer.Consumer {
+	ipnsMgr.UpdateIPNSEntry(initialOffset.String())
 	return consumer.NewFirstToLastConsumer(headReader, memory.NewHeadManager(initialOffset), messagesTree, consumer.FirstToLastConsumerConfig{
 		PollInterval: 50 * time.Millisecond,
 		PollTimeout:  25 * time.Millisecond,
-	})
+	}, ipnsMgr, "")
 }
 
 type testHandler struct {

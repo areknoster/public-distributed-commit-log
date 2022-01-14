@@ -25,7 +25,7 @@ clean:
 # --------- TESTS ------------
 .PHONY: unit-test
 unit-test:
-	go test -short -count=1 ./...
+	go test -race -short -count=1 ./...
 
 # --------- TOOLS ------------
 .PHONY: install-tools install-npm-tools install-go-tools

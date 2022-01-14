@@ -50,11 +50,11 @@ func (s *SignedMessageWriter) Write(ctx context.Context, message proto.Message) 
 // SignedMessageUnwrapper is a decorator on top of MessageReader that unwraps message from signed envelope.
 // It does not verify signature.
 type SignedMessageUnwrapper struct {
-	base storage.MessageReader
+	Base storage.MessageReader
 }
 
 func (s *SignedMessageUnwrapper) Read(ctx context.Context, cid cid.Cid) (storage.ProtoUnmarshallable, error) {
-	unmarshallable, err := s.base.Read(ctx, cid)
+	unmarshallable, err := s.Base.Read(ctx, cid)
 	if err != nil {
 		return nil, fmt.Errorf("read from base reader: %w", err)
 	}
