@@ -67,7 +67,7 @@ func main() {
 		log.Fatal().Err(err).Msg("couldn't set up ipns manager")
 	}
 	instantCommiter := commiter.NewInstant(headManager, storage, memPinner, ipnsManager)
-	sentinel := service.New(messageValidator, memPinner, instantCommiter, headManager, ipns.NewNopManager())
+	sentinel := service.New(messageValidator, memPinner, instantCommiter, headManager, ipnsManager)
 
 	rateLimiter := ratelimiting.NewAlwaysAllowLimiter()
 	grpcserver, err := grpc.NewServer(config.GRPC, rateLimiter)

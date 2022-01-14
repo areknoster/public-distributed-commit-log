@@ -2,13 +2,16 @@ package consumer
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/ipfs/go-cid"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/errgroup"
 
+	"github.com/areknoster/public-distributed-commit-log/ipns"
 	"github.com/areknoster/public-distributed-commit-log/storage"
 	"github.com/areknoster/public-distributed-commit-log/thead"
 )
@@ -23,10 +26,13 @@ type FirstToLastConsumer struct {
 	consumerOffsetManager thead.Manager // todo: this might this to be swapped to sth cached and with sync method
 	messageReader         storage.MessageReader
 	config                FirstToLastConsumerConfig
+	ipnsMgr               ipns.Manager
+	ipnsAddr              string
 }
 
-func NewFirstToLastConsumer(headReader thead.Reader, consumerOffsetManager thead.Manager, messageReader storage.MessageReader, config FirstToLastConsumerConfig) *FirstToLastConsumer {
-	return &FirstToLastConsumer{headReader: headReader, consumerOffsetManager: consumerOffsetManager, messageReader: messageReader, config: config}
+func NewFirstToLastConsumer(headReader thead.Reader, consumerOffsetManager thead.Manager, messageReader storage.MessageReader, config FirstToLastConsumerConfig,
+	ipnsMgr ipns.Manager, ipnsAddr string) *FirstToLastConsumer {
+	return &FirstToLastConsumer{headReader: headReader, consumerOffsetManager: consumerOffsetManager, messageReader: messageReader, config: config, ipnsMgr: ipnsMgr, ipnsAddr: ipnsAddr}
 }
 
 func (f *FirstToLastConsumer) Consume(globalCtx context.Context, handler MessageHandler) error {
@@ -62,9 +68,20 @@ func (f *FirstToLastConsumer) poll(ctx context.Context, handler MessageHandler) 
 	if err != nil {
 		return fmt.Errorf("read current counsumer offset: %w", err)
 	}
-	topicHead, err := f.headReader.ReadHead(ctx)
+	topicHeadCID, err := f.ipnsMgr.ResolveIPNS(f.ipnsAddr)
 	if err != nil {
-		return fmt.Errorf("read topic head: %w", err)
+		return fmt.Errorf("ipns resolve: %w", err)
+	}
+	topicHeadCID = strings.TrimPrefix(topicHeadCID, "/ipfs/")
+	if topicHeadCID == "" {
+		return nil // nothing new, sentinel did not set head ipns address
+	}
+	topicHead, err := cid.Decode(topicHeadCID)
+	if err != nil {
+		if errors.Is(cid.ErrCidTooShort, err) {
+			return nil
+		}
+		return fmt.Errorf("decode topic %s head: %w", topicHeadCID, err)
 	}
 
 	if currOffset == topicHead {
