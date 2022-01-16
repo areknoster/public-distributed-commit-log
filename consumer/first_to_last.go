@@ -19,19 +19,26 @@ import (
 type FirstToLastConsumerConfig struct {
 	PollInterval time.Duration
 	PollTimeout  time.Duration
+	IPNSAddr     string
 }
 
 type FirstToLastConsumer struct {
 	consumerOffsetManager thead.Manager // todo: this might this to be swapped to sth cached and with sync method
+	commitReader          storage.MessageReader
 	messageReader         storage.MessageReader
 	config                FirstToLastConsumerConfig
 	ipnsMgr               ipns.Resolver
-	ipnsAddr              string
 }
 
-func NewFirstToLastConsumer(consumerOffsetManager thead.Manager, messageReader storage.MessageReader, config FirstToLastConsumerConfig,
-	ipnsResolver ipns.Resolver, ipnsAddr string) *FirstToLastConsumer {
-	return &FirstToLastConsumer{consumerOffsetManager: consumerOffsetManager, messageReader: messageReader, config: config, ipnsMgr: ipnsResolver, ipnsAddr: ipnsAddr}
+func NewFirstToLastConsumer(consumerOffsetManager thead.Manager, commitReader, messageReader storage.MessageReader, config FirstToLastConsumerConfig,
+	ipnsResolver ipns.Resolver) *FirstToLastConsumer {
+	return &FirstToLastConsumer{
+		consumerOffsetManager: consumerOffsetManager,
+		commitReader:          commitReader,
+		messageReader:         messageReader,
+		config:                config,
+		ipnsMgr:               ipnsResolver,
+	}
 }
 
 func (f *FirstToLastConsumer) Consume(globalCtx context.Context, handler MessageHandler) error {
@@ -67,7 +74,7 @@ func (f *FirstToLastConsumer) poll(ctx context.Context, handler MessageHandler) 
 	if err != nil {
 		return fmt.Errorf("read current counsumer offset: %w", err)
 	}
-	topicHeadCID, err := f.ipnsMgr.ResolveIPNS(f.ipnsAddr)
+	topicHeadCID, err := f.ipnsMgr.ResolveIPNS(f.config.IPNSAddr)
 	if err != nil {
 		return fmt.Errorf("ipns resolve: %w", err)
 	}
@@ -84,7 +91,7 @@ func (f *FirstToLastConsumer) poll(ctx context.Context, handler MessageHandler) 
 		return nil // nothing new, wait till new poll
 	}
 
-	handleRunner := newFirstToLastHandleRunner(f.messageReader, handler, topicHead, currOffset)
+	handleRunner := newFirstToLastHandleRunner(f.commitReader, f.messageReader, handler, topicHead, currOffset)
 	if err := handleRunner.HandleCommits(ctx); err != nil {
 		return fmt.Errorf("handle commits: %w", err)
 	}
@@ -122,10 +129,10 @@ const (
 )
 
 func newFirstToLastHandleRunner(
-	messageReader storage.MessageReader,
+	commitMessageReader, messageReader storage.MessageReader,
 	handler MessageHandler,
 	headCID, consumerOffset cid.Cid) *firstToLastHandleRunner {
-	commitReader := newStorageCommitReader(messageReader, defaultReadMessageTimeout)
+	commitReader := newStorageCommitReader(commitMessageReader, defaultReadMessageTimeout)
 
 	return &firstToLastHandleRunner{
 		headCID:        headCID,

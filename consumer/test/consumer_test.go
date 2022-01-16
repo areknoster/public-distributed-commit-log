@@ -262,10 +262,14 @@ type createConsumer func(initialOffset cid.Cid, messagesTree storage.MessageRead
 
 var createFirstToLastConsumer createConsumer = func(initialOffset cid.Cid, messagesTree storage.MessageReader, headReader thead.Reader) consumer.Consumer {
 	ipnsMgrResolver.UpdateIPNSEntry(initialOffset.String())
-	return consumer.NewFirstToLastConsumer(memory.NewHeadManager(initialOffset), messagesTree, consumer.FirstToLastConsumerConfig{
-		PollInterval: 50 * time.Millisecond,
-		PollTimeout:  25 * time.Millisecond,
-	}, ipnsMgrResolver, "")
+	return consumer.NewFirstToLastConsumer(
+		memory.NewHeadManager(initialOffset),
+		messagesTree,
+		messagesTree,
+		consumer.FirstToLastConsumerConfig{
+			PollInterval: 50 * time.Millisecond,
+			PollTimeout:  25 * time.Millisecond,
+		}, ipnsMgrResolver)
 }
 
 type testHandler struct {

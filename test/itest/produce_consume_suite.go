@@ -103,10 +103,12 @@ func (s *ProduceConsumeTestSuite) newConsumer(offset cid.Cid) consumer.Consumer 
 	return consumer.NewFirstToLastConsumer(
 		memory.NewHeadManager(offset),
 		s.messageStorage,
+		s.messageStorage,
 		consumer.FirstToLastConsumerConfig{
 			PollInterval: time.Second,
 			PollTimeout:  time.Second,
-		}, s.ipnsMgr, "")
+		},
+		s.ipnsMgr)
 }
 
 func (s *ProduceConsumeTestSuite) TestProduceConsume() {
