@@ -1,6 +1,7 @@
 package ipns
 
 import (
+	"crypto"
 	"fmt"
 	"io"
 	"path"
@@ -52,14 +53,17 @@ type IPNSManager struct {
 	ipnsAddr string
 }
 
-func NewIPNSManager(privKey ipfscrypto.PrivKey,
-	pubKey ipfscrypto.PubKey,
-	shell *shell.Shell) *IPNSManager {
-	return &IPNSManager{
-		privKey: privKey,
-		pubKey:  pubKey,
-		shell:   shell,
+func NewIPNSManager(privKey crypto.PrivateKey, shell *shell.Shell) (*IPNSManager, error) {
+	priv, pub, err := ipfscrypto.KeyPairFromStdKey(privKey)
+	if err != nil {
+		return nil, fmt.Errorf("get ipfscrypto key pair from private key: %w", err)
 	}
+
+	return &IPNSManager{
+		privKey: priv,
+		pubKey:  pub,
+		shell:   shell,
+	}, nil
 }
 
 func (m *IPNSManager) UpdateIPNSEntry(commitCID string) error {
