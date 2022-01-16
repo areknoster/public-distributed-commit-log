@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto"
 
 	"github.com/google/uuid"
 	shell "github.com/ipfs/go-ipfs-api"
@@ -34,9 +35,14 @@ func main() {
 
 	writer := ipfsstorage.NewStorage(shell.NewShell("localhost:5001"), codec)
 
-	signer, err := pdclcrypto.LoadFromPKCSFromPEMFile(cfg.PrivKeyPath)
+	privKey, err := pdclcrypto.LoadFromPKCSFromPEMFile(cfg.PrivKeyPath)
 	if err != nil {
-		log.Fatal().Err(err).Msg("get signer")
+		log.Fatal().Err(err).Msg("get privKey")
+	}
+
+	signer, ok := privKey.(crypto.Signer)
+	if !ok {
+		log.Fatal().Msgf("key is not private crypto.Signer type but %T", privKey)
 	}
 
 	signedWriter := pdclcrypto.NewSignedMessageWriter(writer, codec, cfg.SignerID, signer)

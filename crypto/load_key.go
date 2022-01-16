@@ -2,14 +2,13 @@ package pdclcrypto
 
 import (
 	"crypto"
-	"crypto/ed25519"
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
 	"os"
 )
 
-func LoadFromPKCSFromPEMFile(privKeyPath string) (crypto.Signer, error) {
+func LoadFromPKCSFromPEMFile(privKeyPath string) (crypto.PrivateKey, error) {
 	pemContent, err := os.ReadFile(privKeyPath)
 	if err != nil {
 		return nil, fmt.Errorf("read %s file content: %w", privKeyPath, err)
@@ -17,7 +16,7 @@ func LoadFromPKCSFromPEMFile(privKeyPath string) (crypto.Signer, error) {
 	return ParsePKCSKeyFromPEM(pemContent)
 }
 
-func ParsePKCSKeyFromPEM(pemContent []byte) (crypto.Signer, error) {
+func ParsePKCSKeyFromPEM(pemContent []byte) (crypto.PrivateKey, error) {
 	block, _ := pem.Decode(pemContent)
 	if block == nil {
 		return nil, fmt.Errorf("failed to parse PEM block containing the private key")
@@ -26,9 +25,5 @@ func ParsePKCSKeyFromPEM(pemContent []byte) (crypto.Signer, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse PEM block containing the private key: %w", err)
 	}
-	key, ok := priv.(ed25519.PrivateKey)
-	if !ok {
-		return nil, fmt.Errorf("key is not ed25519.PrivateKey but %T", priv)
-	}
-	return key, nil
+	return priv, nil
 }

@@ -2,6 +2,7 @@ package ipns
 
 import (
 	"crypto"
+	"crypto/ed25519"
 	"fmt"
 	"path"
 	"sync"
@@ -52,6 +53,11 @@ type IPNSManager struct {
 }
 
 func NewIPNSManager(privKey crypto.PrivateKey, shell *shell.Shell) (*IPNSManager, error) {
+	// todo: remove this after https://github.com/libp2p/go-libp2p-core/pull/234 is merged
+	if val, isEd := privKey.(ed25519.PrivateKey); isEd {
+		privKey = &val
+	}
+
 	priv, pub, err := ipfscrypto.KeyPairFromStdKey(privKey)
 	if err != nil {
 		return nil, fmt.Errorf("get ipfscrypto key pair from private key: %w", err)
