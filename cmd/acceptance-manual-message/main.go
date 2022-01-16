@@ -34,7 +34,7 @@ func main() {
 
 	writer := ipfsstorage.NewStorage(shell.NewShell("localhost:5001"), codec)
 
-	signer, err := pdclcrypto.ReadEd25519(cfg.PrivKeyPath)
+	signer, err := pdclcrypto.LoadFromPKCSFromPEMFile(cfg.PrivKeyPath)
 	if err != nil {
 		log.Fatal().Err(err).Msg("get signer")
 	}

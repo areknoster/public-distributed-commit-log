@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto"
 	"fmt"
 	"time"
 
@@ -9,11 +10,11 @@ import (
 	"github.com/ipfs/go-cid"
 	shell "github.com/ipfs/go-ipfs-api"
 	"github.com/kelseyhightower/envconfig"
-	"github.com/libp2p/go-libp2p-core/crypto"
 	"github.com/rs/zerolog/log"
 	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
 
 	"github.com/areknoster/public-distributed-commit-log/cmd/acceptance-sentinel/internal/validator"
+	pdclcrypto "github.com/areknoster/public-distributed-commit-log/crypto"
 	"github.com/areknoster/public-distributed-commit-log/grpc"
 	"github.com/areknoster/public-distributed-commit-log/ipns"
 	"github.com/areknoster/public-distributed-commit-log/ratelimiting"
@@ -82,31 +83,31 @@ func main() {
 }
 
 func setupIPNSManager(config Config, shell *shell.Shell) (ipns.Manager, error) {
-	privKey, pubKey, err := getIPNSKeyPair(config)
+	privKey, err := getIPNSKeyPair(config)
 	if err != nil {
 		return nil, err
 	}
-	return ipns.NewIPNSManager(privKey, pubKey, shell), nil
+	return ipns.NewIPNSManager(privKey, shell)
 }
 
-func getIPNSKeyPair(config Config) (crypto.PrivKey, crypto.PubKey, error) {
+func getIPNSKeyPair(config Config) (crypto.PrivateKey, error) {
 	switch config.Env {
 	case EnvLocal:
-		return ipns.ReadKeyPair(config.Key.Path)
+		return pdclcrypto.LoadFromPKCSFromPEMFile(config.Key.Path)
 	case EnvGCP:
-		return getKeyPairFromSecretManager(config.Key.GCP)
+		return getKeyFromSecretManager(config.Key.GCP)
 	default:
-		return nil, nil, fmt.Errorf("unsupported environment: %s", config.Env)
+		return nil, fmt.Errorf("unsupported environment: %s", config.Env)
 	}
 }
 
-func getKeyPairFromSecretManager(config GCPConfig) (privKey crypto.PrivKey, pubKey crypto.PubKey, err error) {
+func getKeyFromSecretManager(config GCPConfig) (crypto.PrivateKey, error) {
 	// Create the client.
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 	client, err := secretmanager.NewClient(ctx)
 	if err != nil {
-		return nil, nil, fmt.Errorf("create secret manager client: %w", err)
+		return nil, fmt.Errorf("create secret manager client: %w", err)
 	}
 	defer client.Close()
 
@@ -118,8 +119,8 @@ func getKeyPairFromSecretManager(config GCPConfig) (privKey crypto.PrivKey, pubK
 	// Call the API.
 	result, err := client.AccessSecretVersion(ctx, accessRequest)
 	if err != nil {
-		return nil, nil, fmt.Errorf("access secret version: %w", err)
+		return nil, fmt.Errorf("access secret version: %w", err)
 	}
 
-	return ipns.ParseKeyPair(result.Payload.Data)
+	return pdclcrypto.ParsePKCSKeyFromPEM(result.Payload.Data)
 }
