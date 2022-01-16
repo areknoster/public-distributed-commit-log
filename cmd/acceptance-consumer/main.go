@@ -12,16 +12,17 @@ import (
 	shell "github.com/ipfs/go-ipfs-api"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog/log"
+	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/areknoster/public-distributed-commit-log/consumer"
 	pdclcrypto "github.com/areknoster/public-distributed-commit-log/crypto"
 	"github.com/areknoster/public-distributed-commit-log/grpc"
 	"github.com/areknoster/public-distributed-commit-log/ipns"
-	"github.com/areknoster/public-distributed-commit-log/pdclpb"
 	"github.com/areknoster/public-distributed-commit-log/sentinel/sentinelpb"
 	"github.com/areknoster/public-distributed-commit-log/storage"
 	ipfsstorage "github.com/areknoster/public-distributed-commit-log/storage/message/ipfs"
 	"github.com/areknoster/public-distributed-commit-log/storage/pbcodec"
+	"github.com/areknoster/public-distributed-commit-log/test/testpb"
 	"github.com/areknoster/public-distributed-commit-log/thead/memory"
 )
 
@@ -68,22 +69,24 @@ func setupPDCL(ctx context.Context, config Config) {
 
 	firstToLastConsumer := consumer.NewFirstToLastConsumer(
 		consumerOffsetManager,
+		reader,
 		pdclcrypto.NewSignedMessageUnwrapper(reader, pbcodec.Json{}),
 		consumer.FirstToLastConsumerConfig{
 			PollInterval: 10 * time.Second,
 			PollTimeout:  100 * time.Second,
+			IPNSAddr:     resp.IpnsAddr,
 		},
 		ipnsResolver,
-		resp.IpnsAddr)
+	)
 
 	err = firstToLastConsumer.Consume(ctx, consumer.MessageHandlerFunc(
 		func(ctx context.Context, decodable storage.ProtoDecodable) error {
-			pbCommit := &pdclpb.Commit{}
+			pbCommit := &testpb.Message{}
 			if err := decodable.Decode(pbCommit); err != nil {
 				return fmt.Errorf("decode to commit proto: %w", err)
 			}
 
-			fmt.Printf("DEBUG: %+v", pbCommit)
+			fmt.Println(protojson.Format(pbCommit))
 			return nil
 		}))
 	waitForShutdown()
