@@ -52,6 +52,10 @@ func (s *SignedMessageWriter) Write(ctx context.Context, message proto.Message) 
 	return s.base.Write(ctx, signedEnvelope)
 }
 
+func NewSignedMessageUnwrapper(base storage.MessageReader, decoder storage.Decoder) *SignedMessageUnwrapper {
+	return &SignedMessageUnwrapper{base: base, decoder: decoder}
+}
+
 // SignedMessageUnwrapper is a decorator on top of MessageReader that unwraps message from signed envelope.
 // It does not verify signature.
 type SignedMessageUnwrapper struct {

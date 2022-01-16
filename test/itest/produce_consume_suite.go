@@ -25,7 +25,6 @@ import (
 	"github.com/areknoster/public-distributed-commit-log/storage/pbcodec"
 	"github.com/areknoster/public-distributed-commit-log/test/testpb"
 	"github.com/areknoster/public-distributed-commit-log/thead/memory"
-	"github.com/areknoster/public-distributed-commit-log/thead/sentinelhead"
 )
 
 // ProduceConsumeTestSuite can be used to create tests with multiple DI setups, based on setup methods overrides
@@ -37,7 +36,7 @@ type ProduceConsumeTestSuite struct {
 	sentinelClient sentinelpb.SentinelClient
 	producer       *producer.MessageProducer
 	globalCtx      context.Context
-	ipnsMgr        ipns.Manager
+	ipnsMgr        *ipns.TestManagerResolver
 }
 
 func (s *ProduceConsumeTestSuite) SetupSuite() {
@@ -102,12 +101,11 @@ func (s *ProduceConsumeTestSuite) setupSentinelClient() {
 
 func (s *ProduceConsumeTestSuite) newConsumer(offset cid.Cid) consumer.Consumer {
 	return consumer.NewFirstToLastConsumer(
-		sentinelhead.New(s.sentinelClient),
 		memory.NewHeadManager(offset),
 		s.messageStorage,
 		consumer.FirstToLastConsumerConfig{
 			PollInterval: time.Second,
-			PollTimeout:  200 * time.Millisecond,
+			PollTimeout:  time.Second,
 		}, s.ipnsMgr, "")
 }
 

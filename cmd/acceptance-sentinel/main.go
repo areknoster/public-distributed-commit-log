@@ -22,13 +22,13 @@ import (
 	"github.com/areknoster/public-distributed-commit-log/sentinel/pinner"
 	"github.com/areknoster/public-distributed-commit-log/sentinel/sentinelpb"
 	"github.com/areknoster/public-distributed-commit-log/sentinel/service"
-	daemonstorage "github.com/areknoster/public-distributed-commit-log/storage/message/ipfs"
+	ipfsstorage "github.com/areknoster/public-distributed-commit-log/storage/message/ipfs"
 	"github.com/areknoster/public-distributed-commit-log/storage/pbcodec"
 	memoryhead "github.com/areknoster/public-distributed-commit-log/thead/memory"
 )
 
 type Config struct {
-	DaemonStorage daemonstorage.Config
+	DaemonStorage ipfsstorage.Config
 	Validator     validator.Config
 	GRPC          grpc.ServerConfig
 	Env           string `envconfig:"ENVIRONMENT" default:"LOCAL"`
@@ -58,8 +58,8 @@ func main() {
 
 	codec := pbcodec.Json{}
 
-	shell := daemonstorage.NewShell(config.DaemonStorage)
-	storage := daemonstorage.NewStorage(shell, codec)
+	shell := ipfsstorage.NewShell(config.DaemonStorage)
+	storage := ipfsstorage.NewStorage(shell, codec)
 	messageValidator, err := validator.New(storage, codec, config.Validator)
 	if err != nil {
 		log.Fatal().Err(err).Msg("initialize message validator")

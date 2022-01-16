@@ -2,7 +2,6 @@ package consumer
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -12,6 +11,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/areknoster/public-distributed-commit-log/ipns"
+	"github.com/areknoster/public-distributed-commit-log/pdcl"
 	"github.com/areknoster/public-distributed-commit-log/storage"
 	"github.com/areknoster/public-distributed-commit-log/thead"
 )
@@ -22,17 +22,16 @@ type FirstToLastConsumerConfig struct {
 }
 
 type FirstToLastConsumer struct {
-	headReader            thead.Reader
 	consumerOffsetManager thead.Manager // todo: this might this to be swapped to sth cached and with sync method
 	messageReader         storage.MessageReader
 	config                FirstToLastConsumerConfig
-	ipnsMgr               ipns.Manager
+	ipnsMgr               ipns.Resolver
 	ipnsAddr              string
 }
 
-func NewFirstToLastConsumer(headReader thead.Reader, consumerOffsetManager thead.Manager, messageReader storage.MessageReader, config FirstToLastConsumerConfig,
-	ipnsMgr ipns.Manager, ipnsAddr string) *FirstToLastConsumer {
-	return &FirstToLastConsumer{headReader: headReader, consumerOffsetManager: consumerOffsetManager, messageReader: messageReader, config: config, ipnsMgr: ipnsMgr, ipnsAddr: ipnsAddr}
+func NewFirstToLastConsumer(consumerOffsetManager thead.Manager, messageReader storage.MessageReader, config FirstToLastConsumerConfig,
+	ipnsResolver ipns.Resolver, ipnsAddr string) *FirstToLastConsumer {
+	return &FirstToLastConsumer{consumerOffsetManager: consumerOffsetManager, messageReader: messageReader, config: config, ipnsMgr: ipnsResolver, ipnsAddr: ipnsAddr}
 }
 
 func (f *FirstToLastConsumer) Consume(globalCtx context.Context, handler MessageHandler) error {
@@ -76,11 +75,8 @@ func (f *FirstToLastConsumer) poll(ctx context.Context, handler MessageHandler) 
 	if topicHeadCID == "" {
 		return nil // nothing new, sentinel did not set head ipns address
 	}
-	topicHead, err := cid.Decode(topicHeadCID)
+	topicHead, err := pdcl.ParseCID(topicHeadCID)
 	if err != nil {
-		if errors.Is(cid.ErrCidTooShort, err) {
-			return nil
-		}
 		return fmt.Errorf("decode topic %s head: %w", topicHeadCID, err)
 	}
 
