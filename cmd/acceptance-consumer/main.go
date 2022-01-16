@@ -14,15 +14,15 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/areknoster/public-distributed-commit-log/consumer"
+	pdclcrypto "github.com/areknoster/public-distributed-commit-log/crypto"
 	"github.com/areknoster/public-distributed-commit-log/grpc"
 	"github.com/areknoster/public-distributed-commit-log/ipns"
 	"github.com/areknoster/public-distributed-commit-log/pdclpb"
 	"github.com/areknoster/public-distributed-commit-log/sentinel/sentinelpb"
-	"github.com/areknoster/public-distributed-commit-log/signing"
 	"github.com/areknoster/public-distributed-commit-log/storage"
-	daemonstorage "github.com/areknoster/public-distributed-commit-log/storage/ipfs/daemon"
+	ipfsstorage "github.com/areknoster/public-distributed-commit-log/storage/message/ipfs"
+	"github.com/areknoster/public-distributed-commit-log/storage/pbcodec"
 	"github.com/areknoster/public-distributed-commit-log/thead/memory"
-	"github.com/areknoster/public-distributed-commit-log/thead/sentinelhead"
 )
 
 type Config struct {
@@ -50,7 +50,6 @@ func setupPDCL(ctx context.Context, config Config) {
 		log.Fatal().Err(err).Msg("can't connect to sentinel")
 	}
 	sentinelClient := sentinelpb.NewSentinelClient(conn)
-	sentinelHeadReader := sentinelhead.New(sentinelClient)
 	resp, err := sentinelClient.GetHeadIPNS(context.Background(), &sentinelpb.GetHeadIPNSRequest{})
 	if err != nil {
 		log.Fatal().Err(err).Msg("getting ipns address")
@@ -64,25 +63,24 @@ func setupPDCL(ctx context.Context, config Config) {
 		log.Fatal().Err(err).Msg("can't initialize storage")
 	}
 	shell := shell.NewShell("localhost:5001")
-	reader := daemonstorage.NewStorage(shell)
-	ipnsMgr := ipns.NewIPNSManager(nil, nil, shell)
+	ipnsResolver := ipns.NewIPNSResolver(shell)
+	reader := ipfsstorage.NewStorage(shell, pbcodec.Json{})
 
 	firstToLastConsumer := consumer.NewFirstToLastConsumer(
-		sentinelHeadReader,
 		consumerOffsetManager,
-		&signing.SignedMessageUnwrapper{Base: reader},
+		pdclcrypto.NewSignedMessageUnwrapper(reader, pbcodec.Json{}),
 		consumer.FirstToLastConsumerConfig{
 			PollInterval: 10 * time.Second,
 			PollTimeout:  100 * time.Second,
 		},
-		ipnsMgr,
+		ipnsResolver,
 		resp.IpnsAddr)
 
 	err = firstToLastConsumer.Consume(ctx, consumer.MessageHandlerFunc(
-		func(ctx context.Context, unmarshallable storage.ProtoUnmarshallable) error {
+		func(ctx context.Context, decodable storage.ProtoDecodable) error {
 			pbCommit := &pdclpb.Commit{}
-			if err := unmarshallable.Unmarshall(pbCommit); err != nil {
-				return fmt.Errorf("unmarshall to commit proto: %w", err)
+			if err := decodable.Decode(pbCommit); err != nil {
+				return fmt.Errorf("decode to commit proto: %w", err)
 			}
 
 			fmt.Printf("DEBUG: %+v", pbCommit)

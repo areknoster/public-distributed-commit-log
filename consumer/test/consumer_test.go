@@ -32,7 +32,7 @@ var consumerCreators = []createConsumer{
 	createFirstToLastConsumer,
 }
 
-var ipnsMgr = ipns.NewTestManager()
+var ipnsMgrResolver = ipns.NewTestManager()
 
 func TestEdgeCases(t *testing.T) {
 	for _, creator := range consumerCreators {
@@ -52,7 +52,7 @@ func TestEdgeCases(t *testing.T) {
 			mockReader := newMockMessageReader(t)
 			head := mockReader.Commit(cid.Undef)
 			c := creator(cid.Undef, mockReader, memory.NewHeadManager(head))
-			require.NoError(t, ipnsMgr.UpdateIPNSEntry(head.String()))
+			require.NoError(t, ipnsMgrResolver.UpdateIPNSEntry(head.String()))
 			ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 			defer cancel()
 			err := c.Consume(ctx, consumer.MessageHandlerFunc(func(ctx context.Context, message storage.ProtoDecodable) error {
@@ -68,7 +68,7 @@ func TestEdgeCases(t *testing.T) {
 			mockReader.RegisterMessage(th.AddNext())
 			head := mockReader.Commit(cid.Undef)
 			headManager := memory.NewHeadManager(head)
-			require.NoError(t, ipnsMgr.UpdateIPNSEntry(head.String()))
+			require.NoError(t, ipnsMgrResolver.UpdateIPNSEntry(head.String()))
 			c := creator(testutil.RandomCID(t), mockReader, headManager)
 			ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 			defer cancel()
@@ -80,7 +80,7 @@ func TestEdgeCases(t *testing.T) {
 			mockReader.RegisterMessage(th.AddNext())
 			head = mockReader.Commit(head)
 			require.NoError(t, headManager.SetHead(ctx, head))
-			require.NoError(t, ipnsMgr.UpdateIPNSEntry(head.String()))
+			require.NoError(t, ipnsMgrResolver.UpdateIPNSEntry(head.String()))
 			<-ctx.Done()
 			th.AssertAllHandledOnce()
 		})
@@ -105,7 +105,7 @@ func TestLinearIncremental(t *testing.T) {
 				mockReader.RegisterMessage(th.AddNext())
 				head = mockReader.Commit(head)
 				require.NoError(t, headManager.SetHead(ctx, head))
-				require.NoError(t, ipnsMgr.UpdateIPNSEntry(head.String()))
+				require.NoError(t, ipnsMgrResolver.UpdateIPNSEntry(head.String()))
 				time.Sleep(time.Millisecond)
 			}
 
@@ -131,7 +131,7 @@ func TestLinearIncremental(t *testing.T) {
 			mockReader.RegisterMessage(th.AddNext())
 			head = mockReader.Commit(head)
 			require.NoError(t, headManager.SetHead(ctx, head))
-			require.NoError(t, ipnsMgr.UpdateIPNSEntry(head.String()))
+			require.NoError(t, ipnsMgrResolver.UpdateIPNSEntry(head.String()))
 
 			time.Sleep(100 * time.Millisecond)
 			cancel()
@@ -161,7 +161,7 @@ func TestRandomSizedCommits(t *testing.T) {
 				}
 				head = mockReader.Commit(head)
 				require.NoError(t, headManager.SetHead(ctx, head))
-				require.NoError(t, ipnsMgr.UpdateIPNSEntry(head.String()))
+				require.NoError(t, ipnsMgrResolver.UpdateIPNSEntry(head.String()))
 				time.Sleep(5 * time.Millisecond)
 			}
 
@@ -261,11 +261,11 @@ func (m *mockMessageReader) CommitWithError(previous cid.Cid) cid.Cid {
 type createConsumer func(initialOffset cid.Cid, messagesTree storage.MessageReader, headReader thead.Reader) consumer.Consumer
 
 var createFirstToLastConsumer createConsumer = func(initialOffset cid.Cid, messagesTree storage.MessageReader, headReader thead.Reader) consumer.Consumer {
-	ipnsMgr.UpdateIPNSEntry(initialOffset.String())
-	return consumer.NewFirstToLastConsumer(headReader, memory.NewHeadManager(initialOffset), messagesTree, consumer.FirstToLastConsumerConfig{
+	ipnsMgrResolver.UpdateIPNSEntry(initialOffset.String())
+	return consumer.NewFirstToLastConsumer(memory.NewHeadManager(initialOffset), messagesTree, consumer.FirstToLastConsumerConfig{
 		PollInterval: 50 * time.Millisecond,
 		PollTimeout:  25 * time.Millisecond,
-	}, ipnsMgr, "")
+	}, ipnsMgrResolver, "")
 }
 
 type testHandler struct {
