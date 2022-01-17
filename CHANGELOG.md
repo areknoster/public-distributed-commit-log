@@ -2,6 +2,40 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.1.1](https://github.com/areknoster/public-distributed-commit-log/compare/v1.1.0...v1.1.1) (2022-01-17)
+
+
+### Features
+
+* **committer:** support publishing head in ipns ([fbe200f](https://github.com/areknoster/public-distributed-commit-log/commit/fbe200f7550c2b1587437cd191019e7737d8f810))
+* **consumer:** handle message reading for commits and messages separately ([5305c18](https://github.com/areknoster/public-distributed-commit-log/commit/5305c184dbceec1091db74ff0e0391965a3a2fdb))
+* expose grpc endpoint for returning ipns address ([c49245d](https://github.com/areknoster/public-distributed-commit-log/commit/c49245dc6b955f8f7379704a7f2693e33ef1ac0c))
+* **ipns:** use ipns resolver in consumer ([f3b77a7](https://github.com/areknoster/public-distributed-commit-log/commit/f3b77a7b2b1ff3663bcc100f2e9c88d6bf299cc2))
+
+
+### Bug Fixes
+
+* **acceptance-consumer:** minor fixes so that acceptance consumer works ([bcc4582](https://github.com/areknoster/public-distributed-commit-log/commit/bcc4582d6592332cc416e53d1a4c7b79bf8561ee))
+* **crypto:** adjust for buggy libp2p ed25519 key pointer passing ([6229faa](https://github.com/areknoster/public-distributed-commit-log/commit/6229faad73e149346669710a2f1bb724088bc0ab))
+
+
+### Test
+
+* **acceptance-sentinel:** adjust acceptance-sentinel for getting secret from GCP ([3653d61](https://github.com/areknoster/public-distributed-commit-log/commit/3653d61277af7188ccdde06e9245cc1adbfc4a9a))
+* **infra:** add definitions for IPNS secret ([83dd780](https://github.com/areknoster/public-distributed-commit-log/commit/83dd780ba00565a11836a529cadab970195378e8))
+* **infra:** add ipfs server deployment ([b0d2887](https://github.com/areknoster/public-distributed-commit-log/commit/b0d2887f6894a9d2699c92e529c3fa7621d28558))
+* **infra:** add key for ipns to KMS ([aacd459](https://github.com/areknoster/public-distributed-commit-log/commit/aacd459c3241e67e3ea7ce98541253159f5add87))
+* **infra:** add network rules to access ipfs ([83c0605](https://github.com/areknoster/public-distributed-commit-log/commit/83c06052b9d9a9b7e0e01977ec3c41726363ee68))
+* **infra:** add sentinel cloud run deployment ([eb2e74e](https://github.com/areknoster/public-distributed-commit-log/commit/eb2e74eff6dcd2ee4404cb218724bc94d6705919))
+* **infra:** adjust sentinel and ipfs node setup ([2df41cd](https://github.com/areknoster/public-distributed-commit-log/commit/2df41cd03059a1778cf2674c88fe87b94f49f0ce))
+
+
+### Refactoring
+
+* **consumer:** adjust to ipns head resolver ([8101872](https://github.com/areknoster/public-distributed-commit-log/commit/8101872cfb4cbc908ebc58cfd50ab1cbce13998f))
+* **pdclcrypto:** move common key logic to pdclcrypto package ([9cdc088](https://github.com/areknoster/public-distributed-commit-log/commit/9cdc0883e1f0643ccf5836a94ab46ceea98051a5))
+* **storage:** refactor content storage, message storage and codec ([01e4295](https://github.com/areknoster/public-distributed-commit-log/commit/01e4295c29d3ce919575b09d518bae9561237ccd))
+
 ## [1.1.0](https://github.com/areknoster/public-distributed-commit-log/compare/v1.0.1...v1.1.0) (2022-01-13)
 
 
