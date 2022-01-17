@@ -36,7 +36,7 @@ install-npm-tools:
 
 install-go-tools:
 	go mod download -x
-	cat dev/tools.go | grep _ | grep \".*\" -o | xargs -tI % go install %
+	cat tools.go | grep _ | grep \".*\" -o | xargs -tI % go install %
 
 # --------- FORMAT & LINT ------------
 .PHONY: format format-go format-add-trailing-newline
@@ -65,3 +65,9 @@ generate-code: | generate-go-code format
 
 generate-go-code:
 	go generate ./...
+
+# --------- DOCS ------------
+.PHONY: show-docs
+show-docs: 
+	echo "Visit http://localhost:6060/pkg/github.com/areknoster/public-distributed-commit-log/"
+	godoc -http=:6060

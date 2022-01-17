@@ -1,3 +1,4 @@
+// Package messagestorage defines a storage wrapper for handling PDCL messages.
 package messagestorage
 
 import (

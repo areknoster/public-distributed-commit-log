@@ -1,3 +1,4 @@
+// Package commiter contains implementations of committers.
 package commiter
 
 import (

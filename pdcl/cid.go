@@ -1,4 +1,4 @@
-// Package pdcl defines common logic that applies to entire module
+// Package pdcl defines common logic that applies to entire module.
 package pdcl
 
 import (

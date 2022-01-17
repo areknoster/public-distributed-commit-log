@@ -1,3 +1,4 @@
+// Package itest is a main test package with defined testing scenarios.
 package itest
 
 import (

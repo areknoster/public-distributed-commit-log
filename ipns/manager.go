@@ -1,3 +1,4 @@
+// Package ipns enables interaction with InterPlanetary Name System.
 package ipns
 
 import (

@@ -1,3 +1,4 @@
+// Package pdclcrypto provides storage signing wrappers and tools for parsing cryptographic keys.
 package pdclcrypto
 
 import (

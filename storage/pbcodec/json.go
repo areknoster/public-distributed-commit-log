@@ -1,3 +1,4 @@
+// Package pbcoded provides codecs for (de)serializing messages.
 package pbcodec
 
 import (

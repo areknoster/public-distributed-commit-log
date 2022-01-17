@@ -1,3 +1,4 @@
+// Package localfs implements a content storage based on local file system.
 package localfs
 
 import (

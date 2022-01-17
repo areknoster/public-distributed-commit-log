@@ -1,3 +1,4 @@
+// Package ipfs defines a storage based on InterPlanetary File System.
 package ipfs
 
 import (

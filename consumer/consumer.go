@@ -1,3 +1,4 @@
+// Package consumer defines functions for consuming messages.
 package consumer
 
 import (

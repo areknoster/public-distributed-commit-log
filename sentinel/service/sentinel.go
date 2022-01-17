@@ -1,3 +1,4 @@
+// Package service implements sentinel endpoints.
 package service
 
 import (

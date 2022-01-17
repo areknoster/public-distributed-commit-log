@@ -1,3 +1,4 @@
+// Package testutils defines helpers commonly used in testing.
 package testutil
 
 import (
