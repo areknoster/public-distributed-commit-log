@@ -1,3 +1,4 @@
+// Package ratelimiting provides rate limiting tools for sentinel.
 package ratelimiting
 
 import (

@@ -1,3 +1,4 @@
+// Package pinner implements an in-memory IPFS pinner.
 package pinner
 
 import (

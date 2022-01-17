@@ -1,3 +1,4 @@
+// Package grpc is a layer for interacting with gRPC protocol.
 package grpc
 
 import (

@@ -1,3 +1,4 @@
+// Package storage defines interfaces for content storage, message storage and codecs.
 package storage
 
 import (

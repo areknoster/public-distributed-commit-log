@@ -1,3 +1,4 @@
+// Package producer defines functions for producing messages.
 package producer
 
 import (

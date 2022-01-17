@@ -1,3 +1,4 @@
+// Package memory defines an in-memory content storage.
 package memory
 
 import (

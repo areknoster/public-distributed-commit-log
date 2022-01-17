@@ -1,3 +1,4 @@
+// Package sentinel defines type interfaces and other code used by sentinel.
 package sentinel
 
 import (

@@ -1,3 +1,4 @@
+// Package sentinenhead enables to read head value from sentinel.
 package sentinelhead
 
 import (
