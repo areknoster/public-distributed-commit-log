@@ -8,6 +8,7 @@ import (
 	shell "github.com/ipfs/go-ipfs-api"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog/log"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/areknoster/public-distributed-commit-log/crypto"
@@ -55,13 +56,20 @@ func main() {
 
 	prod := producer.NewMessageProducer(signedWriter, sentinelClient)
 
-	msg := &testpb.Message{
-		IdIncremental: 1,
-		Uuid:          uuid.NewString(),
-		Created:       timestamppb.Now(),
+	var g errgroup.Group
+	for i := 0; i < 10; i++ {
+		id := i
+		g.Go(func() error {
+			msg := &testpb.Message{
+				IdIncremental: int64(id),
+				Uuid:          uuid.NewString(),
+				Created:       timestamppb.Now(),
+			}
+			log.Info().Interface("msg", msg).Msg("writing message")
+			return prod.Produce(context.Background(), msg)
+		})
 	}
-	log.Info().Interface("msg", msg).Msg("writing message")
-	if err := prod.Produce(context.Background(), msg); err != nil {
-		log.Fatal().Err(err).Msg("message production failed")
+	if err := g.Wait(); err != nil {
+		log.Fatal().Err(err).Msg("messags production failed")
 	}
 }

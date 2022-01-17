@@ -7,6 +7,7 @@ import (
 	"time"
 
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
+	"github.com/benbjohnson/clock"
 	"github.com/ipfs/go-cid"
 	shell "github.com/ipfs/go-ipfs-api"
 	"github.com/kelseyhightower/envconfig"
@@ -70,7 +71,13 @@ func main() {
 	if err != nil {
 		log.Fatal().Err(err).Msg("couldn't set up ipns manager")
 	}
-	instantCommiter := commiter.NewInstant(headManager, storage, memPinner, ipnsManager)
+	instantCommiter := commiter.NewMaxBufferCommitter(
+		headManager,
+		storage,
+		memPinner,
+		ipnsManager,
+		clock.New().Ticker(20*time.Second),
+		10)
 	sentinel := service.New(messageValidator, memPinner, instantCommiter, headManager, ipnsManager)
 
 	rateLimiter := ratelimiting.NewAlwaysAllowLimiter()
