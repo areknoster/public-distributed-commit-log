@@ -11,25 +11,26 @@ import (
 	"github.com/areknoster/public-distributed-commit-log/storage"
 )
 
-type MessageProducer struct {
+type BlockingProducer struct {
 	storage        storage.MessageWriter
 	sentinelClient sentinelpb.SentinelClient
 }
 
-func NewMessageProducer(writer storage.MessageWriter, sentinelClient sentinelpb.SentinelClient) *MessageProducer {
-	return &MessageProducer{storage: writer, sentinelClient: sentinelClient}
+func NewBlockingProducer(writer storage.MessageWriter, sentinelClient sentinelpb.SentinelClient) *BlockingProducer {
+	return &BlockingProducer{storage: writer, sentinelClient: sentinelClient}
 }
 
-func (m *MessageProducer) Produce(ctx context.Context, message proto.Message) error {
+func (m *BlockingProducer) Produce(ctx context.Context, message proto.Message) error {
 	cid, err := m.storage.Write(ctx, message)
 	if err != nil {
 		return fmt.Errorf("save message to storage: %w", err)
 	}
-	log.Info().Stringer("cid", cid).Msg("message stored")
+	log.Debug().Stringer("cid", cid).Msg("message stored")
 
 	_, err = m.sentinelClient.Publish(ctx, &sentinelpb.PublishRequest{Cid: cid.String()})
 	if err != nil {
-		return fmt.Errorf("publish message to sentinel: %w", err)
+		return fmt.Errorf("publish MessageBuf to sentinel: %w", err)
 	}
+	log.Info().Stringer("cid", cid).Msg("message accepted by sentinel")
 	return nil
 }

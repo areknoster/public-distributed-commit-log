@@ -59,7 +59,7 @@ func (x *Message) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Message.ProtoReflect.Descriptor instead.
+// Deprecated: Use MessageBuf.ProtoReflect.Descriptor instead.
 func (*Message) Descriptor() ([]byte, []int) {
 	return file_test_proto_rawDescGZIP(), []int{0}
 }
@@ -118,13 +118,13 @@ func file_test_proto_rawDescGZIP() []byte {
 var (
 	file_test_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 	file_test_proto_goTypes  = []interface{}{
-		(*Message)(nil),               // 0: testpb.Message
+		(*Message)(nil),               // 0: testpb.MessageBuf
 		(*timestamppb.Timestamp)(nil), // 1: google.protobuf.Timestamp
 	}
 )
 
 var file_test_proto_depIdxs = []int32{
-	1, // 0: testpb.Message.created:type_name -> google.protobuf.Timestamp
+	1, // 0: testpb.MessageBuf.created:type_name -> google.protobuf.Timestamp
 	1, // [1:1] is the sub-list for method output_type
 	1, // [1:1] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
