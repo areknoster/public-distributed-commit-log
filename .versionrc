@@ -39,6 +39,5 @@
       "type": "test",
       "section": "Test"
     }
-  ],
-  "preMajor": true
+  ]
 }
