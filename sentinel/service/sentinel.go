@@ -78,5 +78,6 @@ func (s *Service) GetHeadCID(ctx context.Context, req *sentinelpb.GetHeadCIDRequ
 
 // GetHeadCID can be used by consumers to fetch head from sentinel
 func (s *Service) GetHeadIPNS(ctx context.Context, req *sentinelpb.GetHeadIPNSRequest) (*sentinelpb.GetHeadIPNSResponse, error) {
+	log.Info().Msg("get head IPNS request")
 	return &sentinelpb.GetHeadIPNSResponse{IpnsAddr: s.ipnsManager.GetIPNSAddr()}, nil
 }
