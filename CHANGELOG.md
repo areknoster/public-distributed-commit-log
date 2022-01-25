@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.2.0](https://github.com/areknoster/public-distributed-commit-log/compare/v1.1.1...v1.2.0) (2022-01-25)
+
+
+### Features
+
+* **cmd/acceptance-*:** implement applications for manual operations on acceptance topic ([118817b](https://github.com/areknoster/public-distributed-commit-log/commit/118817b13b02686af3082bc6bc7cfdbdd83d0d7b))
+* **producer:** implement concurrent producer ([da43802](https://github.com/areknoster/public-distributed-commit-log/commit/da43802ebf85672a81a58e1d4d2efb42b11df754))
+* **sentinel:** configurable maxbuffer commmiter ([d536f73](https://github.com/areknoster/public-distributed-commit-log/commit/d536f73ca4ac803b90daef9d7e48845c53a9ce1d))
+
+
+### Refactoring
+
+* **terraform:** modularize deployment ([a52e2c9](https://github.com/areknoster/public-distributed-commit-log/commit/a52e2c9f43db785369039155dd7a99e1f98ac7fe))
+
+
+### Test
+
+* **acceptance:** basic acceptance performance benchmark ([df6b7c2](https://github.com/areknoster/public-distributed-commit-log/commit/df6b7c2b5fe51aa1cf717dd8924ffc0b579a3d19))
+
 ### [1.1.1](https://github.com/areknoster/public-distributed-commit-log/compare/v1.1.0...v1.1.1) (2022-01-17)
 
 
