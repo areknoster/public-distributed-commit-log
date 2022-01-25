@@ -1,0 +1,42 @@
+# dirs
+proto_includes
+postgres-data
+node_modules
+
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+main
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+
+# Generated files
+gen/
+
+# Build artifacts
+build/
+.vscode/
+.idea/
+
+# Golang Specific Patterns
+bin
+__debug_bin
+vendor
+
+# macOS
+**/.DS_Store
+
+# Developer configurations
+.overmind.sock
+
+# test results
+*.log
+test_generated
