@@ -35,7 +35,7 @@ type ProduceConsumeTestSuite struct {
 	messageStorage storage.MessageStorage
 	grpcServer     *grpc.Server
 	sentinelClient sentinelpb.SentinelClient
-	producer       *producer.MessageProducer
+	producer       *producer.BlockingProducer
 	globalCtx      context.Context
 	ipnsMgr        *ipns.TestManagerResolver
 }
@@ -88,7 +88,7 @@ func (s *ProduceConsumeTestSuite) setupMessageStorage() {
 }
 
 func (s *ProduceConsumeTestSuite) setupProducer() {
-	s.producer = producer.NewMessageProducer(s.messageStorage, s.sentinelClient)
+	s.producer = producer.NewBlockingProducer(s.messageStorage, s.sentinelClient)
 }
 
 func (s *ProduceConsumeTestSuite) setupSentinelClient() {
