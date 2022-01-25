@@ -18,6 +18,11 @@ import (
 	"github.com/areknoster/public-distributed-commit-log/thead"
 )
 
+type MaxBufferCommiterConfig struct {
+	MaxBufferSize int           `envconfig:"COMMITER_MAX_BUFFER_SIZE" default:"1000"`
+	Interval      time.Duration `envconfig:"COMMITER_INTERVAL" default:"1m"`
+}
+
 // MaxBufferCommitter adds commit after buffer is filled. If it's not filled for
 // a long time, it adds commit after a specified interval.
 type MaxBufferCommitter struct {
@@ -34,15 +39,19 @@ type MaxBufferCommitter struct {
 }
 
 // NewMaxBufferCommitter returns a new instance of MaxBufferCommitter.
-func NewMaxBufferCommitter(headManager thead.Manager, messageStorage storage.MessageStorage, pinner sentinel.Pinner,
-	ipnsManager ipns.Manager, ticker *clock.Ticker, maxBufferSize int) *MaxBufferCommitter {
+func NewMaxBufferCommitter(
+	headManager thead.Manager,
+	messageStorage storage.MessageStorage,
+	pinner sentinel.Pinner,
+	ipnsManager ipns.Manager,
+	config MaxBufferCommiterConfig) *MaxBufferCommitter {
 	mbc := &MaxBufferCommitter{
 		headManager:    headManager,
 		messageStorage: messageStorage,
 		pinner:         pinner,
 		ipnsManager:    ipnsManager,
-		ticker:         ticker,
-		maxBufferSize:  maxBufferSize,
+		ticker:         clock.New().Ticker(config.Interval),
+		maxBufferSize:  config.MaxBufferSize,
 	}
 	go mbc.run()
 	return mbc
@@ -109,8 +118,8 @@ func (mbc *MaxBufferCommitter) commit() error {
 
 func (mbc *MaxBufferCommitter) Add(ctx context.Context, cid cid.Cid) error {
 	mbc.mu.Lock()
-	defer mbc.mu.Unlock()
 	mbc.uncommitted = append(mbc.uncommitted, cid)
+	mbc.mu.Unlock()
 	if len(mbc.uncommitted) >= mbc.maxBufferSize {
 		go func() {
 			log.Debug().Msgf("reached a maximum commit buffer of %d, committing...", mbc.maxBufferSize)
