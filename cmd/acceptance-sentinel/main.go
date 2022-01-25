@@ -36,6 +36,7 @@ type Config struct {
 		Path string `envconfig:"PRIV_KEY_PATH"`
 		GCP  GCPConfig
 	}
+	Commiter commiter.MaxBufferCommiterConfig
 }
 
 type GCPConfig struct {
@@ -58,19 +59,24 @@ func main() {
 
 	codec := pbcodec.Json{}
 
-	shell := ipfsstorage.NewShell(config.DaemonStorage)
-	storage := ipfsstorage.NewStorage(shell, codec)
+	ipfsShell := ipfsstorage.NewShell(config.DaemonStorage)
+	storage := ipfsstorage.NewStorage(ipfsShell, codec)
 	messageValidator, err := validator.New(storage, codec, config.Validator)
 	if err != nil {
 		log.Fatal().Err(err).Msg("initialize message validator")
 	}
 	memPinner := pinner.NewMemoryPinner()
 	headManager := memoryhead.NewHeadManager(cid.Undef)
-	ipnsManager, err := setupIPNSManager(config, shell)
+	ipnsManager, err := setupIPNSManager(config, ipfsShell)
 	if err != nil {
 		log.Fatal().Err(err).Msg("couldn't set up ipns manager")
 	}
-	instantCommiter := commiter.NewInstant(headManager, storage, memPinner, ipnsManager)
+	instantCommiter := commiter.NewMaxBufferCommitter(
+		headManager,
+		storage,
+		memPinner,
+		ipnsManager,
+		config.Commiter)
 	sentinel := service.New(messageValidator, memPinner, instantCommiter, headManager, ipnsManager)
 
 	rateLimiter := ratelimiting.NewAlwaysAllowLimiter()

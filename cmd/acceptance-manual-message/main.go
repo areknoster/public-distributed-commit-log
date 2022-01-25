@@ -3,11 +3,14 @@ package main
 import (
 	"context"
 	"crypto"
+	"time"
 
 	"github.com/google/uuid"
 	shell "github.com/ipfs/go-ipfs-api"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog/log"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/areknoster/public-distributed-commit-log/crypto"
@@ -20,14 +23,15 @@ import (
 )
 
 type Config struct {
-	SentinelConn grpc.ConnConfig
-	SignerID     string `envconfig:"SIGNER_ID" required:"true"`
-	PrivKeyPath  string `envconfig:"PRIV_KEY_PATH" required:"true"`
+	SentinelConn             grpc.ConnConfig
+	ConcurrentProducerConfig producer.BasicConcurrentProducerConfig
+	SignerID                 string `envconfig:"SIGNER_ID" required:"true"`
+	PrivKeyPath              string `envconfig:"PRODUCER_KEY_PATH" required:"true"`
 }
 
 func main() {
-	cfg := &Config{}
-	if err := envconfig.Process("", cfg); err != nil {
+	config := &Config{}
+	if err := envconfig.Process("", config); err != nil {
 		log.Fatal().Err(err).Msg("load PDCL config")
 	}
 
@@ -35,7 +39,7 @@ func main() {
 
 	writer := ipfsstorage.NewStorage(shell.NewShell("localhost:5001"), codec)
 
-	privKey, err := pdclcrypto.LoadFromPKCSFromPEMFile(cfg.PrivKeyPath)
+	privKey, err := pdclcrypto.LoadFromPKCSFromPEMFile(config.PrivKeyPath)
 	if err != nil {
 		log.Fatal().Err(err).Msg("get privKey")
 	}
@@ -45,23 +49,46 @@ func main() {
 		log.Fatal().Msgf("key is not private crypto.Signer type but %T", privKey)
 	}
 
-	signedWriter := pdclcrypto.NewSignedMessageWriter(writer, codec, cfg.SignerID, signer)
+	signedWriter := pdclcrypto.NewSignedMessageWriter(writer, codec, config.SignerID, signer)
 
-	sentinelConn, err := grpc.Dial(cfg.SentinelConn)
+	sentinelConn, err := grpc.Dial(config.SentinelConn)
 	if err != nil {
 		log.Fatal().Err(err).Msg("dial sentinel")
 	}
 	sentinelClient := sentinelpb.NewSentinelClient(sentinelConn)
 
-	prod := producer.NewMessageProducer(signedWriter, sentinelClient)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
 
-	msg := &testpb.Message{
-		IdIncremental: 1,
-		Uuid:          uuid.NewString(),
-		Created:       timestamppb.Now(),
+	blockingProducer := producer.NewBlockingProducer(signedWriter, sentinelClient)
+	concurrentProducer := producer.StartBasicConcurrentProducer(ctx, blockingProducer, config.ConcurrentProducerConfig)
+
+	go queueMessages(ctx, concurrentProducer.Messages())
+	handleErrors(concurrentProducer.Errors())
+}
+
+func handleErrors(errors <-chan producer.Error) {
+	for err := range errors {
+		log.Error().
+			RawJSON("message", []byte(protojson.Format(err.Message))).
+			Err(err.Err).
+			Msg("message production failed")
 	}
-	log.Info().Interface("msg", msg).Msg("writing message")
-	if err := prod.Produce(context.Background(), msg); err != nil {
-		log.Fatal().Err(err).Msg("message production failed")
+}
+
+func queueMessages(ctx context.Context, messages chan<- proto.Message) {
+	defer close(messages)
+	for i := int64(0); i < 100; i++ {
+		select {
+		case <-ctx.Done():
+			log.Error().Int64("message_index", i).Msg("context done, production stopped before all messages were sent")
+			return
+		case messages <- &testpb.Message{
+			IdIncremental: i,
+			Uuid:          uuid.NewString(),
+			Created:       timestamppb.Now(),
+		}: // pass
+		}
 	}
+	log.Info().Msg("messages queued")
 }

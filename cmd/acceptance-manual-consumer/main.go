@@ -72,8 +72,8 @@ func setupPDCL(ctx context.Context, config Config) {
 		reader,
 		pdclcrypto.NewSignedMessageUnwrapper(reader, pbcodec.Json{}),
 		consumer.FirstToLastConsumerConfig{
-			PollInterval: 10 * time.Second,
-			PollTimeout:  100 * time.Second,
+			PollInterval: 20 * time.Second,
+			PollTimeout:  20 * time.Second,
 			IPNSAddr:     resp.IpnsAddr,
 		},
 		ipnsResolver,
