@@ -37,11 +37,14 @@ type ProduceConsumeTestSuite struct {
 	sentinelClient sentinelpb.SentinelClient
 	producer       *producer.BlockingProducer
 	globalCtx      context.Context
-	ipnsMgr        *ipns.TestManagerResolver
+	ipnsMgr        ipns.Manager
+	ipnsResolver   ipns.Resolver
 }
 
 func (s *ProduceConsumeTestSuite) SetupSuite() {
-	s.ipnsMgr = ipns.NewTestManager()
+	testManagerResolver := ipns.NewTestManager()
+	s.ipnsMgr = testManagerResolver
+	s.ipnsResolver = testManagerResolver
 	s.setupMessageStorage()
 	s.setupSentinel()
 	s.setupSentinelClient()
@@ -109,7 +112,7 @@ func (s *ProduceConsumeTestSuite) newConsumer(offset cid.Cid) consumer.Consumer 
 			PollInterval: time.Second,
 			PollTimeout:  time.Second,
 		},
-		s.ipnsMgr)
+		s.ipnsResolver)
 }
 
 func (s *ProduceConsumeTestSuite) TestProduceConsume() {

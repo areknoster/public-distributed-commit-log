@@ -18,7 +18,12 @@ variable "ipfs-disk-size-gb" {
 }
 
 variable machine_type {
-  default = "g1-small"
+  default = "n2-standard-4"
+}
+
+variable preemptible {
+  type = bool
+  default = true
 }
 
 

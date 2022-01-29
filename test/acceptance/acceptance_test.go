@@ -40,7 +40,7 @@ type Config struct {
 // which is deployed in the cloud.
 // This gives us an idea, if the code really serves its purpose
 func BenchmarkAcceptance(b *testing.B) {
-	globalCtx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	globalCtx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 	b.Cleanup(cancel)
 
 	deps := dependencies{}
@@ -48,7 +48,7 @@ func BenchmarkAcceptance(b *testing.B) {
 
 	b.Run("Producer should be able to add at least 100 messages per minute on average", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			produceConsumeN(globalCtx, b, deps, 1000)
+			produceConsumeN(globalCtx, b, deps, 2000)
 		}
 	})
 }
@@ -171,8 +171,8 @@ func (d *dependencies) initProducer(globalCtx context.Context) {
 		globalCtx,
 		blockingProducer,
 		producer.BasicConcurrentProducerConfig{
-			JobsNumber:     200,
-			ProduceTimeout: time.Minute,
+			JobsNumber:     250,
+			ProduceTimeout: 2 * time.Minute,
 			ErrBuf:         20,
 			MessageBuf:     1000,
 		},

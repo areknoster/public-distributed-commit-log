@@ -21,20 +21,12 @@ module "sentinel" {
           value = local.ipfs_node_ip
         },
         {
-          name  = "IPNS_KEY_SECRET_NAME"
-          value = google_secret_manager_secret.ipns-key.name
-        },
-        {
-          name  = "IPNS_KEY_SECRET_VERSION"
-          value = data.google_secret_manager_secret_version.ipns-key-version.name
-        },
-        {
           name = "COMMITER_MAX_BUFFER_SIZE"
           value = "500"
         },
         {
           name= "COMMITER_INTERVAL"
-          value = "1m"
+          value = "30s"
         },
     ])
   }
@@ -69,6 +61,10 @@ resource "google_compute_instance" "acceptance-sentinel-vm" {
       image = module.sentinel.source_image
     }
   }
+  scheduling {
+    preemptible = var.preemptible
+    automatic_restart = !var.preemptible
+  }
 
   network_interface {
     network_ip = google_compute_address.internal-sentinel-address.address
@@ -93,36 +89,6 @@ resource "google_compute_instance" "acceptance-sentinel-vm" {
       "https://www.googleapis.com/auth/cloud-platform",
     ]
   }
-}
-
-resource "google_secret_manager_secret" "ipns-key" {
-  secret_id = "ipns-key"
-
-  labels = {
-    label = "sentinel"
-  }
-
-  replication {
-    automatic = true
-  }
-  provisioner "local-exec" {
-    command = "echo '\n\n-= ADD IPNS PRIVATE KEY TO ${google_secret_manager_secret.ipns-key.name} AND RUN  `touch /tmp/ipns-key-added`; =-\n\n'; while ! test -f /tmp/ipns-key-added; do sleep 10; done"
-  }
-}
-
-data "google_secret_manager_secret_version" "ipns-key-version" {
-  secret = google_secret_manager_secret.ipns-key.name
-  depends_on = [
-    google_secret_manager_secret.ipns-key
-  ]
-}
-
-
-resource "google_secret_manager_secret_iam_member" "secret-access" {
-  secret_id  = google_secret_manager_secret.ipns-key.id
-  role       = "roles/secretmanager.secretAccessor"
-  member     = "serviceAccount:${google_service_account.sentinel.email}"
-  depends_on = [google_secret_manager_secret.ipns-key]
 }
 
 resource "google_storage_bucket_iam_member" "registry_reader" {
