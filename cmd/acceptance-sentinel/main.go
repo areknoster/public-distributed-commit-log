@@ -1,6 +1,11 @@
 package main
 
 import (
+	"github.com/ipfs/go-cid"
+	shell "github.com/ipfs/go-ipfs-api"
+	"github.com/kelseyhightower/envconfig"
+	"github.com/rs/zerolog/log"
+
 	"github.com/areknoster/public-distributed-commit-log/cmd/acceptance-sentinel/internal/validator"
 	"github.com/areknoster/public-distributed-commit-log/grpc"
 	"github.com/areknoster/public-distributed-commit-log/ipns"
@@ -12,10 +17,6 @@ import (
 	ipfsstorage "github.com/areknoster/public-distributed-commit-log/storage/message/ipfs"
 	"github.com/areknoster/public-distributed-commit-log/storage/pbcodec"
 	memoryhead "github.com/areknoster/public-distributed-commit-log/thead/memory"
-	"github.com/ipfs/go-cid"
-	shell "github.com/ipfs/go-ipfs-api"
-	"github.com/kelseyhightower/envconfig"
-	"github.com/rs/zerolog/log"
 )
 
 type Config struct {
@@ -35,11 +36,6 @@ type GCPConfig struct {
 	SecretName    string `envconfig:"IPNS_KEY_SECRET_NAME"`
 	SecretVersion string `envconfig:"IPNS_KEY_SECRET_VERSION"`
 }
-
-const (
-	EnvLocal = "LOCAL"
-	EnvGCP   = "GCP"
-)
 
 func main() {
 	log.Info().Msg("initializing sentinel")

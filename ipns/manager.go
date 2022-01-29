@@ -3,14 +3,13 @@ package ipns
 
 import (
 	"fmt"
-	"github.com/libp2p/go-libp2p-core/peer"
-	"github.com/multiformats/go-multibase"
 	"path"
 	"sync"
 	"time"
 
 	shell "github.com/ipfs/go-ipfs-api"
-	ipfscrypto "github.com/libp2p/go-libp2p-core/crypto"
+	"github.com/libp2p/go-libp2p-core/peer"
+	"github.com/multiformats/go-multibase"
 )
 
 type Manager interface {
@@ -45,10 +44,7 @@ func (m *TestManagerResolver) ResolveIPNS(_ string) (string, error) {
 }
 
 type IPNSManager struct {
-	privKey ipfscrypto.PrivKey
-	pubKey  ipfscrypto.PubKey
-	shell   *shell.Shell
-
+	shell    *shell.Shell
 	ipnsAddr string
 }
 

@@ -116,7 +116,7 @@ func (s *ProduceConsumeTestSuite) newConsumer(offset cid.Cid) consumer.Consumer 
 }
 
 func (s *ProduceConsumeTestSuite) TestProduceConsume() {
-	ctx, cancel := context.WithTimeout(s.globalCtx, 10*time.Second)
+	ctx, cancel := context.WithTimeout(s.globalCtx, 30*time.Second)
 	defer cancel()
 
 	const messageNumber = 10
