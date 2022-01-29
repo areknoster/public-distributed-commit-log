@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.3.0](https://github.com/areknoster/public-distributed-commit-log/compare/v1.2.0...v1.3.0) (2022-01-29)
+
+
+### Features
+
+* **terraform:** add support for preemptible nodes ([b0aa5ac](https://github.com/areknoster/public-distributed-commit-log/commit/b0aa5ac7d3d4578a077b270c0737a6c3ccfe61e1))
+* **terraform:** cheaper instances and networking ([b84fb89](https://github.com/areknoster/public-distributed-commit-log/commit/b84fb89b84f26572d30d8646a96b8769338d7c95))
+
+
+### Bug Fixes
+
+* **ipns:** fix logic related to setting and retrieving IPNS head ([67201b0](https://github.com/areknoster/public-distributed-commit-log/commit/67201b09eb308308e4ec305cb4e8ed14021e7b9a))
+
 ## [1.2.0](https://github.com/areknoster/public-distributed-commit-log/compare/v1.1.1...v1.2.0) (2022-01-25)
 
 
