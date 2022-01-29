@@ -2,14 +2,13 @@ package itest
 
 import (
 	"context"
-	"crypto/ed25519"
-	"github.com/areknoster/public-distributed-commit-log/ipns"
 	"testing"
 	"time"
 
 	shell "github.com/ipfs/go-ipfs-api"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/areknoster/public-distributed-commit-log/ipns"
 	ipfsstorage "github.com/areknoster/public-distributed-commit-log/storage/message/ipfs"
 	"github.com/areknoster/public-distributed-commit-log/storage/pbcodec"
 	"github.com/areknoster/public-distributed-commit-log/test/testpb"
@@ -25,9 +24,7 @@ func TestMemoryProduceConsumeTestSuite(t *testing.T) {
 
 type LocalDaemonProduceConsumeTestSuite struct {
 	ProduceConsumeTestSuite
-	sh   *shell.Shell
-	priv ed25519.PrivateKey
-	pub  ed25519.PublicKey
+	sh *shell.Shell
 }
 
 func (s *LocalDaemonProduceConsumeTestSuite) SetupSuite() {
