@@ -2,6 +2,8 @@ package itest
 
 import (
 	"context"
+	"crypto/ed25519"
+	"github.com/areknoster/public-distributed-commit-log/ipns"
 	"testing"
 	"time"
 
@@ -23,9 +25,14 @@ func TestMemoryProduceConsumeTestSuite(t *testing.T) {
 
 type LocalDaemonProduceConsumeTestSuite struct {
 	ProduceConsumeTestSuite
+	sh   *shell.Shell
+	priv ed25519.PrivateKey
+	pub  ed25519.PublicKey
 }
 
 func (s *LocalDaemonProduceConsumeTestSuite) SetupSuite() {
+	s.sh = shell.NewShell("localhost:5001")
+
 	s.setupMessageStorage()
 	s.ProduceConsumeTestSuite.SetupSuite()
 	s.waitForDaemon()
@@ -42,9 +49,14 @@ func (s *LocalDaemonProduceConsumeTestSuite) waitForDaemon() {
 	s.Fail("daemon doesn't respond")
 }
 
+func (s *LocalDaemonProduceConsumeTestSuite) setupIPNS() {
+	ipnsMgr, err := ipns.NewIPNSManager(s.sh)
+	s.Require().NoError(err)
+	s.ipnsMgr = ipnsMgr
+}
+
 func (s *LocalDaemonProduceConsumeTestSuite) setupMessageStorage() {
-	sh := shell.NewShell("localhost:5001")
-	s.messageStorage = ipfsstorage.NewStorage(sh, pbcodec.Json{})
+	s.messageStorage = ipfsstorage.NewStorage(s.sh, pbcodec.Json{})
 }
 
 func TestLocalDaemonProduceConsumeTestSuite(t *testing.T) {

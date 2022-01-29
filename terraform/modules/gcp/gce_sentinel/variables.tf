@@ -26,4 +26,9 @@ variable "sentinel_additional_envs" {
   ]
 }
 
+variable preemptible {
+  type = bool
+  default = true
+}
+
 

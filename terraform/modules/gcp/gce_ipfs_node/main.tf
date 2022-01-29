@@ -100,6 +100,11 @@ resource "google_compute_instance" "ipfs-node-vm" {
     }
   }
 
+  scheduling {
+    preemptible = var.preemptible
+    automatic_restart = !var.preemptible
+  }
+
   metadata = {
     gce-container-declaration   = module.ipfs-node.metadata_value
     google-logging-enabled    = "false"

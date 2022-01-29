@@ -1,20 +1,7 @@
 package main
 
 import (
-	"context"
-	"crypto"
-	"fmt"
-	"time"
-
-	secretmanager "cloud.google.com/go/secretmanager/apiv1"
-	"github.com/ipfs/go-cid"
-	shell "github.com/ipfs/go-ipfs-api"
-	"github.com/kelseyhightower/envconfig"
-	"github.com/rs/zerolog/log"
-	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
-
 	"github.com/areknoster/public-distributed-commit-log/cmd/acceptance-sentinel/internal/validator"
-	pdclcrypto "github.com/areknoster/public-distributed-commit-log/crypto"
 	"github.com/areknoster/public-distributed-commit-log/grpc"
 	"github.com/areknoster/public-distributed-commit-log/ipns"
 	"github.com/areknoster/public-distributed-commit-log/ratelimiting"
@@ -25,6 +12,10 @@ import (
 	ipfsstorage "github.com/areknoster/public-distributed-commit-log/storage/message/ipfs"
 	"github.com/areknoster/public-distributed-commit-log/storage/pbcodec"
 	memoryhead "github.com/areknoster/public-distributed-commit-log/thead/memory"
+	"github.com/ipfs/go-cid"
+	shell "github.com/ipfs/go-ipfs-api"
+	"github.com/kelseyhightower/envconfig"
+	"github.com/rs/zerolog/log"
 )
 
 type Config struct {
@@ -89,44 +80,5 @@ func main() {
 }
 
 func setupIPNSManager(config Config, shell *shell.Shell) (ipns.Manager, error) {
-	privKey, err := getIPNSKeyPair(config)
-	if err != nil {
-		return nil, err
-	}
-	return ipns.NewIPNSManager(privKey, shell)
-}
-
-func getIPNSKeyPair(config Config) (crypto.PrivateKey, error) {
-	switch config.Env {
-	case EnvLocal:
-		return pdclcrypto.LoadFromPKCSFromPEMFile(config.Key.Path)
-	case EnvGCP:
-		return getKeyFromSecretManager(config.Key.GCP)
-	default:
-		return nil, fmt.Errorf("unsupported environment: %s", config.Env)
-	}
-}
-
-func getKeyFromSecretManager(config GCPConfig) (crypto.PrivateKey, error) {
-	// Create the client.
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
-	defer cancel()
-	client, err := secretmanager.NewClient(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("create secret manager client: %w", err)
-	}
-	defer client.Close()
-
-	// Build the request.
-	accessRequest := &secretmanagerpb.AccessSecretVersionRequest{
-		Name: config.SecretVersion,
-	}
-
-	// Call the API.
-	result, err := client.AccessSecretVersion(ctx, accessRequest)
-	if err != nil {
-		return nil, fmt.Errorf("access secret version: %w", err)
-	}
-
-	return pdclcrypto.ParsePKCSKeyFromPEM(result.Payload.Data)
+	return ipns.NewIPNSManager(shell)
 }
