@@ -71,6 +71,7 @@ resource "google_compute_address" "internal-ipfs-server-address" {
 resource "google_compute_address" "external-ipfs-server-address" {
   name         = "ipfs-node-external-address"
   address_type = "EXTERNAL"
+  network_tier = "STANDARD"
 }
 
 resource "google_compute_instance" "ipfs-node-vm" {
@@ -97,6 +98,7 @@ resource "google_compute_instance" "ipfs-node-vm" {
     subnetwork = var.subnetwork
     access_config {
       nat_ip = google_compute_address.external-ipfs-server-address.address
+      network_tier = "STANDARD"
     }
   }
 

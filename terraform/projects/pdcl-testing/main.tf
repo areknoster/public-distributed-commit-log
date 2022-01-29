@@ -13,8 +13,9 @@ module "ipfs-node" {
 
   ipfs-docker-image  = local.ipfs-image-tag
   registry-bucket-id = google_container_registry.registry.id
-  subnetwork           = google_compute_subnetwork.pdcl-test-subnetwork.self_link
-  zone                 = local.zone
+  subnetwork         = google_compute_subnetwork.pdcl-test-subnetwork.self_link
+  zone               = local.zone
+  machine_type       = "g1-small"
 
   depends_on = [null_resource.add-ipfs-image]
 }
@@ -23,6 +24,6 @@ module "sentinel" {
   source = "../../modules/gcp/gce_sentinel"
 
   ipfs-node-self-link = module.ipfs-node.ipfs-node-instance.self_link
-  registry_bucket_id    = google_container_registry.registry.id
-  sentinel_image        = "eu.gcr.io/${local.project}/${local.sentinel-image-name}:latest"
+  registry_bucket_id  = google_container_registry.registry.id
+  sentinel_image      = "eu.gcr.io/${local.project}/${local.sentinel-image-name}:latest"
 }

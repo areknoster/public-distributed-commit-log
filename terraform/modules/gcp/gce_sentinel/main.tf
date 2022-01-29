@@ -48,6 +48,7 @@ resource "google_compute_address" "internal-sentinel-address" {
 resource "google_compute_address" "external-sentinel-address" {
   name         = "${local.sentinel-instance-name}-external-address"
   address_type = "EXTERNAL"
+  network_tier = "STANDARD"
 }
 
 resource "google_compute_instance" "acceptance-sentinel-vm" {
@@ -71,6 +72,7 @@ resource "google_compute_instance" "acceptance-sentinel-vm" {
     subnetwork = local.subnet
     access_config {
       nat_ip = google_compute_address.external-sentinel-address.address
+      network_tier = "STANDARD"
     }
   }
 
