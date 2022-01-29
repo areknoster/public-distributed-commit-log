@@ -2,15 +2,14 @@
 package ipns
 
 import (
-	"crypto"
-	"crypto/ed25519"
 	"fmt"
+	"github.com/libp2p/go-libp2p-core/peer"
+	"github.com/multiformats/go-multibase"
 	"path"
 	"sync"
 	"time"
 
 	shell "github.com/ipfs/go-ipfs-api"
-	"github.com/ipfs/go-ipns"
 	ipfscrypto "github.com/libp2p/go-libp2p-core/crypto"
 )
 
@@ -53,38 +52,43 @@ type IPNSManager struct {
 	ipnsAddr string
 }
 
-func NewIPNSManager(privKey crypto.PrivateKey, shell *shell.Shell) (*IPNSManager, error) {
-	// todo: remove this after https://github.com/libp2p/go-libp2p-core/pull/234 is merged
-	if val, isEd := privKey.(ed25519.PrivateKey); isEd {
-		privKey = &val
-	}
-
-	priv, pub, err := ipfscrypto.KeyPairFromStdKey(privKey)
+func getIPNSAddress(sh *shell.Shell) (string, error) {
+	// this implementation is extremely non-obvious
+	// because IPFS doesn't normally allow for finding IPNS address
+	// of given key unless some file is added to it.
+	resp, err := sh.ID()
 	if err != nil {
-		return nil, fmt.Errorf("get ipfscrypto key pair from private key: %w", err)
+		return "", fmt.Errorf("get IPFS ID: %w", err)
+	}
+	pid, err := peer.Decode(resp.ID)
+	if err != nil {
+		return "", fmt.Errorf("decode peer ID: %w", err)
+	}
+	ipnsAddr, err := peer.ToCid(pid).StringOfBase(multibase.Base36)
+	if err != nil {
+		return "", fmt.Errorf("encode ipns address: %w", err)
+	}
+	return ipnsAddr, nil
+}
+
+func NewIPNSManager(sh *shell.Shell) (*IPNSManager, error) {
+	ipnsAddress, err := getIPNSAddress(sh)
+	if err != nil {
+		return nil, fmt.Errorf("get IPNS address from IPFS node: %w", err)
 	}
 
 	return &IPNSManager{
-		privKey: priv,
-		pubKey:  pub,
-		shell:   shell,
+		shell:    sh,
+		ipnsAddr: ipnsAddress,
 	}, nil
 }
 
 func (m *IPNSManager) UpdateIPNSEntry(commitCID string) error {
 	ipfsAddr := path.Join("/ipfs/", commitCID)
-	ipnsRecord, err := ipns.Create(m.privKey, []byte(ipfsAddr), 0, time.Time{}, 24*time.Hour)
-	if err != nil {
-		return err
-	}
-	ipns.EmbedPublicKey(m.pubKey, ipnsRecord)
-
-	fmt.Println("publishing...")
-	resp, err := m.shell.PublishWithDetails(ipfsAddr, "", time.Hour, time.Hour, false)
+	resp, err := m.shell.PublishWithDetails(ipfsAddr, "", 24*time.Hour, 10*time.Minute, false)
 	if err != nil {
 		return fmt.Errorf("publishing ipns update to ipfs daemon: %v", err)
 	}
-	fmt.Printf("SUCCESS: %+v", resp)
 	m.ipnsAddr = resp.Name
 	return nil
 }
