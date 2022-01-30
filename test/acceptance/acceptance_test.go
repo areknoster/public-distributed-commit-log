@@ -3,13 +3,19 @@ package acceptance
 import (
 	"context"
 	"crypto"
+	"fmt"
+	"os"
+	"os/signal"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
 	shell "github.com/ipfs/go-ipfs-api"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
@@ -40,43 +46,44 @@ type Config struct {
 // which is deployed in the cloud.
 // This gives us an idea, if the code really serves its purpose
 func BenchmarkAcceptance(b *testing.B) {
-	globalCtx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
-	b.Cleanup(cancel)
+	logsFile, err := os.OpenFile("bechmark.log", os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0o777)
+	require.NoError(b, err)
+	log.Logger = log.Output(logsFile).Level(zerolog.InfoLevel)
 
-	deps := dependencies{}
+	globalCtx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer cancel()
+	globalCtx, cancel = context.WithTimeout(globalCtx, time.Hour)
+	defer cancel()
+
+	deps := &dependencies{}
 	deps.init(b, globalCtx)
+	go func() {
+		<-globalCtx.Done()
+		close(deps.concurrentProducer.Messages())
+		deps.globalWg.Wait()
+	}()
 
-	b.Run("Producer should be able to add at least 100 messages per minute on average", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
-			produceConsumeN(globalCtx, b, deps, 2000)
+	for _, messagesNumber := range []int{100, 500, 2500} {
+		if b.Failed() {
+			return
 		}
-	})
+		b.Run(fmt.Sprintf("Acceptance benchmark with %d messages", messagesNumber), func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				produceConsumeN(globalCtx, b, deps, messagesNumber)
+			}
+		})
+	}
 }
 
-func produceConsumeN(globalCtx context.Context, b *testing.B, deps dependencies, messagesNumber int) {
+func produceConsumeN(globalCtx context.Context, b *testing.B, deps *dependencies, messagesNumber int) {
 	produceCtx, cancelProduce := context.WithCancel(globalCtx)
 	defer cancelProduce()
 
-	errHandlingDone := make(chan struct{})
-	b.Cleanup(func() {
-		<-errHandlingDone // wait for all errors to be sinked
-	})
-	go func() {
-		for err := range deps.concurrentProducer.Errors() {
-			b.Logf("got an error: %s", err.Err.Error())
-			cancelProduce()
-		}
-		errHandlingDone <- struct{}{}
-	}()
-
 	expectedToReceive := make(map[string]struct{})
 	messages := deps.concurrentProducer.Messages()
-	defer close(messages)
 	for j := 0; j < messagesNumber; j++ {
-		select {
-		case <-produceCtx.Done():
+		if produceCtx.Err() != nil {
 			return
-		default:
 		}
 		messageUUID := uuid.NewString()
 		expectedToReceive[messageUUID] = struct{}{}
@@ -86,14 +93,14 @@ func produceConsumeN(globalCtx context.Context, b *testing.B, deps dependencies,
 			Created:       timestamppb.Now(),
 		}
 	}
-	consumeCtx, cancelConsume := context.WithCancel(globalCtx)
 
+	consumeCtx, cancelConsume := context.WithCancel(globalCtx)
 	receivedUUIDsChan := make(chan string, 20)
 	go func() {
 		for gotUUID := range receivedUUIDsChan {
 			delete(expectedToReceive, gotUUID)
 			if len(expectedToReceive) == 0 {
-				b.Logf("received all %d messages", messagesNumber)
+				log.Info().Int("sent_received_messages", messagesNumber).Msg("received all messages")
 				cancelConsume()
 			}
 		}
@@ -105,14 +112,17 @@ func produceConsumeN(globalCtx context.Context, b *testing.B, deps dependencies,
 			if err := message.Decode(tm); err != nil {
 				return err
 			}
-			b.Logf("got: id=%d uuid=%s", tm.IdIncremental, tm.Uuid)
+			log.Info().Int64("id_incremental", tm.IdIncremental).Str("uuid", tm.Uuid).Msg("message received")
 			receivedUUIDsChan <- tm.Uuid
 			return nil
 		}))
+	close(receivedUUIDsChan)
 	require.ErrorIs(b, err, consumer.ErrContextDone)
 }
 
 type dependencies struct {
+	globalWg sync.WaitGroup
+
 	config              Config
 	sh                  *shell.Shell
 	codec               storage.Codec
@@ -136,6 +146,14 @@ func (d *dependencies) init(tb testing.TB, globalCtx context.Context) {
 	d.ipnsResolver = ipns.NewIPNSResolver(d.sh)
 	d.initIPNSAddr(tb, globalCtx)
 	d.initConsumerWithLatestHead(tb)
+
+	go func() {
+		d.globalWg.Add(1)
+		for err := range d.concurrentProducer.Errors() {
+			tb.Fatalf("got an error: %s", err.Err.Error())
+		}
+		d.globalWg.Done()
+	}()
 }
 
 func (d *dependencies) initConsumerWithLatestHead(t testing.TB) {
@@ -171,8 +189,8 @@ func (d *dependencies) initProducer(globalCtx context.Context) {
 		globalCtx,
 		blockingProducer,
 		producer.BasicConcurrentProducerConfig{
-			JobsNumber:     250,
-			ProduceTimeout: 2 * time.Minute,
+			JobsNumber:     200,
+			ProduceTimeout: 3 * time.Minute,
 			ErrBuf:         20,
 			MessageBuf:     1000,
 		},

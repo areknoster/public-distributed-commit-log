@@ -1,0 +1,8 @@
+go test . -timeout=1h -bench=. -benchtime 15m
+goos: darwin
+goarch: amd64
+pkg: github.com/areknoster/public-distributed-commit-log/test/acceptance
+cpu: Intel(R) Core(TM) i5-1038NG7 CPU @ 2.00GHz
+BenchmarkAcceptance/Acceptance_benchmark_with_100_messages-8                  13        76095890343 ns/op
+BenchmarkAcceptance/Acceptance_benchmark_with_500_messages-8                   9        159987333302 ns/op
+BenchmarkAcceptance/Acceptance_benchmark_with_2500_messages-8                  2        609435367555 ns/op
