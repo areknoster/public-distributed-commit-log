@@ -56,6 +56,7 @@ resource "google_compute_instance" "acceptance-sentinel-vm" {
   name         = local.sentinel-instance-name
   machine_type = "f1-micro"
   zone         = local.zone
+  desired_status = "RUNNING"
 
   boot_disk {
     initialize_params {

@@ -80,6 +80,7 @@ resource "google_compute_instance" "ipfs-node-vm" {
   machine_type              = var.machine_type
   zone                      = var.zone
   allow_stopping_for_update = true
+  desired_status = "RUNNING"
 
   attached_disk {
     source      = google_compute_disk.ipfs-data-pd.self_link
