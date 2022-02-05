@@ -13,7 +13,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/areknoster/public-distributed-commit-log/crypto"
+	pdclcrypto "github.com/areknoster/public-distributed-commit-log/crypto"
 	"github.com/areknoster/public-distributed-commit-log/grpc"
 	"github.com/areknoster/public-distributed-commit-log/producer"
 	"github.com/areknoster/public-distributed-commit-log/sentinel/sentinelpb"

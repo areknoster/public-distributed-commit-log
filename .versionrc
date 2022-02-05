@@ -2,10 +2,15 @@
   "bumpFiles": [
     {
       "filename": "VERSION.txt",
-      "type": "plain-text"
+      "updater": "./tools/standard-version-updater.js"
     }
   ],
-  "packageFiles": [],
+  "packageFiles": [
+    {
+      "filename": "VERSION.txt",
+      "updater": "./tools/standard-version-updater.js"
+    }
+  ],
   "types": [
     {
       "type": "feat",

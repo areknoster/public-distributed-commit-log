@@ -35,8 +35,7 @@ install-npm-tools:
 	npm install -g standard-version
 
 install-go-tools:
-	go mod download -x
-	cat tools.go | grep _ | grep \".*\" -o | xargs -tI % go install %
+	cd tools && go mod download -x && cat tools.go | grep _ | grep \".*\" -o | xargs -tI % go install %
 
 # --------- FORMAT & LINT ------------
 .PHONY: format format-go format-add-trailing-newline
@@ -44,7 +43,7 @@ format: format-go format-add-trailing-newline
 
 format-go:
 	gofumpt -w .
-	gci -w -local github.com/areknoster/public-distributed-commit-log . 1>/dev/null
+	goimports -w -local github.com/areknoster/public-distributed-commit-log .
 
 format-add-trailing-newline:
 	git grep -zIl ''  | while IFS= read -rd '' f; do tail -c1 < "$$f" | read -r _ || echo >> "$$f"; done
