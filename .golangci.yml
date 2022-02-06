@@ -66,7 +66,7 @@ issues:
 linters:
   enable:
     - gofumpt
-    - govet
+    - megacheck
     - dupl
     - goconst
     - misspell
@@ -75,6 +75,5 @@ linters:
     - structcheck
     - deadcode
   disable:
-    - megacheck
     - errcheck
   fast: true
