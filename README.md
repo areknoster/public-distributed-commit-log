@@ -25,29 +25,48 @@ In fact, basic PDCL setup is on top of IPFS. What PDCL enables is dynamic publis
 So this is a niche that PDCL tries to fill. 
 A platform for append-only message log, that's scalable, distributed and public, but that's not expensive to operate.
 
-## Documentation & architecture
-TBD, but here is a nice video to give an intuition on how it works in general.
+## Current status
+PDCL is in very early stages of the development. In fact, besides our test deployments for [acceptance testing](test/acceptance/acceptance_benchmark.txt) and [Open Pollution - demonstration app](https://github.com/jmichalak9/open-pollution) we're not aware of any usage right now.
+
+So we're on the stage of discovery. It's bad if you want to use PDCL as a core feature for your enterprise system. But it's good if you want to innovate. [Say hello](https://github.com/areknoster/public-distributed-commit-log/discussions/34) and let's have fun together 💪
+## Architecture
+For reference on the terms used below, see [Glossary](#glossary)
+PDCL distinguished 3 stakeholders: Topic Owner, Publisher, and Subscriber.
+
+**Topic Owner** starts and maintains topic. They would create public repository, where they define:
+- Validation rules for accepted messages: e.g. schema, data values ranges or signature owners.
+  For an example, [see logic we used for acceptance testing](cmd/acceptance-sentinel/internal/validator/signed_validator.go)
+- [Encoding of messages](storage/pbcodec/)
+- [Storage implementation](storage/) - an implementation of [content addressable storage](https://en.wikipedia.org/wiki/Content-addressable_storage). Currently only [IPFS](https://ipfs.io/) based implementation is supported for publicly available topics. Remaining implementations can be used for local testing.
+- [Head management implementation](thead) - the way to propagate information about new commits. Currently the main implementation for public topics is based on [IPNS](https://docs.ipfs.io/concepts/ipns/) 
+- All of the above requirements are enforced by [Sentinel](sentinel) - an application, that validates messages and maintains reference to the topic head. Sentinel can be easily deployed using provided [Terraform modules](terraform/modules) 
+
+**Publisher** (or producer in current code, see #36) - Adds data to chosen topic. They need to have access to the data that's useful for some topic. They use definitions from Topic repository, to transform the data they have and save it for public access. Blocking and concurrent implementation for producing is in `producer` package.
+
+**Subscriber** (or consumer in current code, see #36) - Reads data from chosen topic. They can expect, that the messages that they read adhere the definitions defined by topic. The implementations that can be used for fetching newest commits and messages and handling them can be found in [consumer](consumer) package.
+
+
+For an overview of how the logic of message exchange can look like see video below.
 
 https://user-images.githubusercontent.com/38364298/151680034-d5f2c57b-2ee0-465f-bbb5-bbc6e7e58a96.mp4
-
-The cloud in the middle is common, [content addressable storage](https://en.wikipedia.org/wiki/Content-addressable_storage) - in current main implementation it is based on [IPFS](https://ipfs.io/)
-
+## FAQ
+### Do I need to deploy PDCL to start working with it?
+No. The core logic PDCL provides is about publishing and subscribing to messages.
+For instance, [integration tests](test/itest) use in-memory hash map as Storage implementation to test our logic. Similarly, you can start up your solution locally and move to public later.
 ## Status and contributing
 Depending on the general interest and personal time commitment of the authors and other contributors, 
 the project can be further developed. Please, create an issue, PR or reach out to the authors 
 for assistance with deployment, questions or ideas.
 
 ## Roadmap
-* Investigate possibilities for more Message Storage implementations and extending current ones. 
-In particular implementation based on Filecoin or other free and distributed storage could be looked upon.
-* Add components for error handling and traversing logic for consumer. Current implementation doesn't handle missing messages very gracefully.
-A mechanism to implement traverse stop could also be useful.
-* Implement Broker, so that messages can be batched from multiple sources and writing and reading does not require running your own message storage solution.
-* Cluster mode for both Sentinel and IPFS nodes for redundancy and better scalability
-* Terraform modules for other cloud providers, docker compose and helm chart for wider deployment support
-* Template repo with example topic definition
-* Performance tuning (especially investigate IPFS node utilization under load which seems to be abnormally high)
+See [Project](https://github.com/users/areknoster/projects/3) to keep track on current development effort. Also, feel free to add new issues and discuss your needs.
 
+## Glossary
+**topic** - a unit which aggregates messages with same encoding, schema and semantic meaning
+**message** - 
+**data message** - a structured unit of data saved to PDCL. The schema, encoding and valid values are defined per topic. Data messages are immutable.
+**commit** - a message belonging to PDCL topic (or topics) that refers to data messages and previous commit. Having a reference to a commit allows subscriber to find all previous commits and thus all previous messages. 
+**head** (or thead, topic head) - the latest commit. 
 
 ## Authors
 - [Arkadiusz Noster](https://github.com/areknoster)
