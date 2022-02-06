@@ -5,9 +5,10 @@ import (
 	"path"
 	"strings"
 
-	"github.com/areknoster/public-distributed-commit-log/pdcl"
 	"github.com/ipfs/go-cid"
 	shell "github.com/ipfs/go-ipfs-api"
+
+	"github.com/areknoster/public-distributed-commit-log/pdcl"
 )
 
 type resolver interface {

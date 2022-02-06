@@ -2,7 +2,6 @@ package consumer
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -18,8 +17,6 @@ type commit struct {
 	Previous cid.Cid
 	Messages []cid.Cid
 }
-
-var errCommitNotFound = errors.New("commit not found")
 
 func newCommit(itsOwnCID cid.Cid, pbCommit *pdclpb.Commit) (commit, error) {
 	messagesCids := make([]cid.Cid, len(pbCommit.MessagesCids))
@@ -75,16 +72,4 @@ func (cr *storageCommitReader) GetCommit(ctx context.Context, cid cid.Cid) (comm
 	}
 
 	return domainCommit, nil
-}
-
-type fakeCommitReader struct {
-	Commits map[cid.Cid]commit
-}
-
-func (f fakeCommitReader) GetCommit(ctx context.Context, cid cid.Cid) (commit, error) {
-	c, exists := f.Commits[cid]
-	if !exists {
-		return commit{}, errCommitNotFound
-	}
-	return c, nil
 }

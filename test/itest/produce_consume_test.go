@@ -31,6 +31,7 @@ func (s *LocalDaemonProduceConsumeTestSuite) SetupSuite() {
 	s.sh = shell.NewShell("localhost:5001")
 
 	s.setupMessageStorage()
+	s.setupIPNS()
 	s.ProduceConsumeTestSuite.SetupSuite()
 	s.waitForDaemon()
 }

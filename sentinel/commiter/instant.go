@@ -45,7 +45,7 @@ func (i *Instant) Add(ctx context.Context, cid cid.Cid) error {
 		MessagesCids:      []string{cid.String()},
 	}
 
-	commitCID, err := i.messageStorage.Write(nil, commit)
+	commitCID, err := i.messageStorage.Write(context.TODO(), commit)
 	if err != nil {
 		return fmt.Errorf("write message to storage: %w", err)
 	}

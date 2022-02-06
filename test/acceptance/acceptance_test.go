@@ -147,8 +147,8 @@ func (d *dependencies) init(tb testing.TB, globalCtx context.Context) {
 	d.initIPNSAddr(tb, globalCtx)
 	d.initConsumerWithLatestHead(tb)
 
+	d.globalWg.Add(1)
 	go func() {
-		d.globalWg.Add(1)
 		for err := range d.concurrentProducer.Errors() {
 			tb.Fatalf("got an error: %s", err.Err.Error())
 		}

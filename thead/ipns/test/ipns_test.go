@@ -6,14 +6,15 @@ import (
 	"testing"
 	"time"
 
+	shell "github.com/ipfs/go-ipfs-api"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/areknoster/public-distributed-commit-log/storage/message/ipfs"
 	"github.com/areknoster/public-distributed-commit-log/storage/pbcodec"
 	"github.com/areknoster/public-distributed-commit-log/test/testpb"
 	"github.com/areknoster/public-distributed-commit-log/thead"
 	. "github.com/areknoster/public-distributed-commit-log/thead/ipns"
-	shell "github.com/ipfs/go-ipfs-api"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestHeadManager_WriteReadHead(t *testing.T) {
