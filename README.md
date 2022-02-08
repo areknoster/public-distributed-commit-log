@@ -30,7 +30,8 @@ PDCL is in very early stages of the development. In fact, besides our test deplo
 
 So we're on the stage of discovery. It's bad if you want to use PDCL as a core feature for your enterprise system. But it's good if you want to innovate. [Say hello](https://github.com/areknoster/public-distributed-commit-log/discussions/34) and let's have fun together 💪
 ## Architecture
-For reference on the terms used below, see [Glossary](#glossary)
+For reference on the terms used below, see [Glossary](#glossary).
+
 PDCL distinguished 3 stakeholders: Topic Owner, Publisher, and Subscriber.
 
 **Topic Owner** starts and maintains topic. They would create public repository, where they define:
