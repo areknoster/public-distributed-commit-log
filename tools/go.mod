@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/golangci/golangci-lint v1.44.0
-	golang.org/x/tools v0.1.9
+	golang.org/x/tools v0.1.12
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.2.0
 	google.golang.org/protobuf v1.27.1
 	mvdan.cc/gofumpt v0.2.1
@@ -144,13 +144,12 @@ require (
 	github.com/uudashr/gocognit v1.0.5 // indirect
 	github.com/yagipy/maintidx v1.0.0 // indirect
 	github.com/yeya24/promlinter v0.1.1-0.20210918184747-d757024714a1 // indirect
-	github.com/yuin/goldmark v1.4.1 // indirect
+	github.com/yuin/goldmark v1.4.13 // indirect
 	gitlab.com/bosi/decorder v0.2.1 // indirect
-	golang.org/x/mod v0.5.1 // indirect
-	golang.org/x/net v0.0.0-20211112202133-69e39bad7dc2 // indirect
-	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
-	golang.org/x/text v0.3.7 // indirect
-	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
+	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
+	golang.org/x/net v0.7.0 // indirect
+	golang.org/x/sys v0.5.0 // indirect
+	golang.org/x/text v0.7.0 // indirect
 	gopkg.in/ini.v1 v1.66.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
